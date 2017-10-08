@@ -68,7 +68,7 @@ class Router {
         list($class,$method) = explode("@", $controller);
         $class = Application::$pathModule."Controllers/".$class;
         
-        $classFile = str_replace("/", DIRECTORY_SEPARATOR, DIR_ROOT."/src{$class}.php");
+        $classFile = str_replace("/", DIRECTORY_SEPARATOR, DIR_ROOT."{$class}.php");
         $class = str_replace("/", "\\", $class);
         
         if(!is_file($classFile))

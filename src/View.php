@@ -2,7 +2,7 @@
 
 class View {
     static function get($view, $data = []){
-        $dir = DIR_ROOT."/src".(Application::$pathModule)."View";
+        $dir = DIR_ROOT.(Application::$pathModule)."View";
         $filename = str_replace("/", DIRECTORY_SEPARATOR, "{$dir}/{$view}");
            
         if(is_file($filename.".tpl")){

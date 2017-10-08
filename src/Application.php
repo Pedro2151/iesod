@@ -10,7 +10,7 @@ class Application{
 		static::$dirModule = str_replace(
 		    "/",
 		    DIRECTORY_SEPARATOR,
-		    DIR_ROOT.'/src'.static::$pathModule);
+		    DIR_ROOT.static::$pathModule);
 		if(is_file(static::$dirModule."Router.php"))
 		    require_once static::$dirModule."Router.php";
 		else 
