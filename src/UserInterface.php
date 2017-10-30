@@ -10,5 +10,5 @@ interface UserInterface extends ModelInterface
      * @param string $login User login, username or email
      * @return BuildInterface
      */
-    public function whereLogin($login);
+    static function whereLogin($login);
 }

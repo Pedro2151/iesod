@@ -2,6 +2,7 @@
 
 use Iesod\Database\Model;
 
+
 class Auth {
     static $AuthData;
     private $User;
@@ -15,6 +16,7 @@ class Auth {
      * @return \Iesod\AuthUser|boolean False if fail
      */
     static function getUser($force = false){
+        
         $sessionId = sessionId();
         
         if(
@@ -72,15 +74,15 @@ class Auth {
             return false;
         }
         
-        if($data['verificate']==0){//0 - No / 1 - Yes
+        if($data['active']==0){//0 - No / 1 - Yes
             throw new AuthException(
-                "User not verificate",
+                "User not active",
                 AuthException::E_USER_UNVERIFICATION
             );
             return false;
         }
         
-        if($data['password']!=$password){
+        if(!checkHash($password, $data['password'])){
             throw new AuthException(
                 "Password invalid",
                 AuthException::E_PASSWORD_INVALID
@@ -94,7 +96,9 @@ class Auth {
             'id_session' => $sessionId,
             'id_user' => $data['id'],
             'active' => 1,
+            'usergroup' => $data['usergroup']?? 0,
             'name' => $data['name'],
+            'last_name' => $data['last_name'],
             'username' => $data['username'],
             'email' => $data['email'],
             'phone' => $data['phone']

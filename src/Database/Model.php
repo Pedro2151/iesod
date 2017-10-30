@@ -4,7 +4,7 @@ use Iesod\Request;
 use Iesod\RequestInterface;
 use Iesod\Request\RequestException;
 
-class Model {
+class Model implements ModelInterface {
     protected $table;
     protected $primaryKey;
     protected $connectionId;
@@ -180,7 +180,7 @@ class Model {
      */
     static function where($first, $operator , $secund){
         $r = static::Build();
-        return $r->where($table, $first, $operator , $secund);
+        return $r->where($first, $operator , $secund);
     }
     static function whereIsNull($field){
         $r = static::Build();

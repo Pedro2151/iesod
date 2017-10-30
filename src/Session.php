@@ -51,12 +51,14 @@ class Session implements \Serializable {
             protected $primaryKey = 'id';
         };
         
-        $result = $Model->select(['id'])
+        $result = $Model->select([ Model::Raw('count(id)') ])
             ->id( $id )
             ->get();
-        
-        if($result===false || $result->rowCount()==0){
-            $browser =  get_browser(null,true);
+			
+        list($count) = $result->fetch();
+		
+        if($count==0){
+            $browser =  get_browser($_SERVER['HTTP_USER_AGENT'],true);
             $result = $Model->insert([
                 'id' => $id,
                 'browser' => $browser['browser_name_pattern'],
@@ -149,10 +151,13 @@ class Session implements \Serializable {
             static::$data = $value;
             return true;
         }
-        
-        return $this->_put($data, $value,$name,$forceType);
+        $data = (static::$data)?? [];
+        $r = $this->_put($data, $value,$name,$forceType);
+		
+		static::$data = $data;
+		return $r;
     }
-    private function _put($data, $value,$name,$forceType = false){
+    private function _put(&$data, $value,$name,$forceType = false){
         $names = explode(".", $name);
         $Name = '';
         while( empty($Name) && count($names)>0 ){

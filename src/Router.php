@@ -4,7 +4,7 @@ class Router {
     static $prefix = "";
     public static function prefix($prefix, $routers){
         $prefixBuffer = self::$prefix;
-        self::$prefix .= $prefix; 
+        self::$prefix .= $prefix;
         
         $routers();
         self::$prefix = $prefixBuffer;
@@ -13,7 +13,7 @@ class Router {
         if(strtoupper($_SERVER['REQUEST_METHOD'])=="GET")
             return self::any($request, $controller);
             
-        return false;
+            return false;
     }
     public static function post($request,$controller){
         if(strtoupper($_SERVER['REQUEST_METHOD'])=="POST")
@@ -64,7 +64,9 @@ class Router {
             }
         }
         
-        
+        static::unknown($controller,$p);
+    }
+    public static function unknown($controller,$args = []){
         list($class,$method) = explode("@", $controller);
         $class = Application::$pathModule."Controllers/".$class;
         
@@ -73,18 +75,19 @@ class Router {
         
         if(!is_file($classFile))
             throw new \Exception("<strong>FILE NOT FOUND:</strong> ".$classFile);
-        
-        require_once $classFile;
-        $return = call_user_func_array(array(new $class, $method), $p);
-        
-        if($return===false){
-            throw new \Exception("Erro inesperado");
-        } else {
-            if(is_array($return)){
-                header("Content-type:text/json;charset=utf-8");
-                echo json_encode($return);
-                exit;
+            
+            require_once $classFile;
+            $return = call_user_func_array(array(new $class, $method), $args);
+            
+            if($return===false){
+                throw new \Exception("Erro inesperado");
+            } else {
+                if(is_array($return)){
+                    header("Content-type:text/json;charset=utf-8");
+                    echo json_encode($return);
+                    exit;
+                }
+                
             }
-        }
-    }
+    }   
 }

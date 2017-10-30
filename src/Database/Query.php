@@ -80,19 +80,19 @@ class Query {
         }
         
         try {
-            self::$connections = new \PDO(
+            self::$connections[$connectionsId] = new \PDO(
                 "{$driver}:host={$host};port={$port};dbname={$dbname};charset=UTF8",
                 $username,
                 $password,
                 $options
             );
         } catch (\PDOException $e) {
-            self::$connections = null;
+            self::$connections[$connectionsId] = null;
             throw new \Exception("Connection failed: " . utf8_encode( $e->getMessage() ).".");
             return false;
         }
         
-        return self::$connections;
+        return self::$connections[$connectionsId];
     }
     /** Execulta query sql
      * 
@@ -105,24 +105,28 @@ class Query {
     static public function query($sql,$bindData = null,$connectionsId = null){
         $pdo = static::connect($connectionsId);
         
-        if(is_null($bindData)){
+        if(is_null($bindData) || empty($bindData)){
             if(!$query = $pdo->query($sql)){
-                list($handle, $codError, $StrError) = $pdo->errorInfo();
-                throw new \Exception("Error: #{$codError}: {$StrError}",$codError);
+				list($handle, $codError, $StrError) = $pdo->errorInfo();
+				
+				throw new \Exception("Error: #{$codError}: {$StrError}",$codError);
                 return false;
             }
         } else {
-            $q = $pdo->prepare($sql);
-            foreach ($bindData as $parameter=>$value){
-                $q->bindValue($parameter, $value);
+            $query = $pdo->prepare($sql);
+            $data = '';
+			foreach ($bindData as $parameter=>$value){
+				$data .= "{$parameter} = '{$value}'\r\n";
             }
-            if($query = $q->execute()){
-                list($handle, $codError, $StrError) = $pdo->errorInfo();
-                throw new \Exception("Error: #{$codError}: {$StrError}",$codError);
+            
+            if(!$query->execute( $bindData )){
+                list($handle, $codError, $StrError) = $query->errorInfo();
+				
+                throw new \Exception("Error: #{$codError}: {$StrError}".json_encode($bindData),$codError);
                 return false;
             }
         }
-        
+		
         return $query;
     }
     
@@ -137,7 +141,7 @@ class Query {
      * @return mixed|array|boolean False if Fail
      */
     static public function getData($table, $fields = null, $where = null,$limit = null,$orderBy = null,$connectionsId = null){
-        $sql = "SELECT ".(is_null($fields)?'*':$fields)." FROM {$table}";
+        $sql = "SELECT ".(is_null($fields)?'*':$fields)." FROM `{$table}`";
         $bindData = [];
         if(!is_null($where) && !empty($where)){
             $sql .= " WHERE ".static::whereTransform($where, $bindData);
@@ -180,7 +184,7 @@ class Query {
             if( is_null($value) ){
                 $values .= "{$sep}NULL";
             } else {
-                if(is_object($value) && get_class($value)=='Raw'){
+                if(is_object($value) && get_class($value)=='Iesod\Database\Raw'){
                     $values .= "{$sep}".$value->value;
                 } else {
                     $values .= "{$sep}:{$field}";
@@ -193,7 +197,7 @@ class Query {
         
         $result = static::query("INSERT INTO `{$table}` ({$fields}) VALUES ({$values})",$bindData,$connectionsId);
         if($returnInsertId)
-            return $pdo->lastInsertId();
+            return static::lastInsertId($connectionsId);
         else 
             return $result;
     }
@@ -215,7 +219,7 @@ class Query {
             if( is_null($value) ){
                 $values .= "{$sep}`{$field}` = NULL";
             } else {
-                if(is_object($value) && get_class($value)=='Raw'){
+                if(is_object($value) && get_class($value)=='Iesod\Database\Raw'){
                     $values .= "{$sep}`{$field}` = ".$value->value;
                 } else {
                     $values .= "{$sep}`{$field}` = :{$field}";
@@ -243,8 +247,11 @@ class Query {
         if(is_array($where)){
             $sep = "";
             foreach ($where as $w){
-                if(is_object($w) && get_class($w)=='Raw'){
+                if(is_object($w) && get_class($w)=='Iesod\Database\Raw'){
                     $Where .= "{$sep}".$w->value;
+                } elseif(is_object($w) && get_class($w)=='Iesod\Database\WhereExpression'){
+                    $Where .= "{$sep}(".$w->expression.")";
+                    $bindData = array_merge($bindData, $w->bindData);
                 } else {
                     if(isset($w[2]) && !is_null($w[2]) ){
                         if($w[1]=='BETWEEN'){
@@ -254,18 +261,18 @@ class Query {
                                 throw new \Exception("Third index undefined in where");
                                 
                                 for($i=2;$i<=3;$i++){
-                                    if(is_object($w[$i]) && get_class($w[$i])=='Raw'){
+                                    if(is_object($w[$i]) && get_class($w[$i])=='Iesod\Database\Raw'){
                                         $Where .= $Sep.$w[$i]->value;
                                     } else {
                                         $nameBind = ":w".($i-2)."_".$w[0];
-                                        $Where .= $Sep.$nameBind;
+                                        $Where .= $Sep."'{$nameBind}'";
                                         $bindData[$nameBind] = $w[$i];
                                     }
                                     $Sep = " AND ";
                                 }
                                 $Where .= ")";
                         } else {
-                            if(is_object($w[2]) && get_class($w[2])=='Raw'){
+                            if(is_object($w[2]) && get_class($w[2])=='Iesod\Database\Raw'){
                                 $Where .= "{$sep}`{$w[0]}` {$w[1]} ".$w[2]->value;
                             } else {
                                 $Where .= "{$sep}`{$w[0]}` {$w[1]} :w_{$w[0]}";
@@ -302,7 +309,8 @@ class Query {
         $fields = [];
         
         for($i=0;$i<$c;$i++){
-            $fields[ $f['name'] ] = new Field( $result->getColumnMeta($i) );
+            $f = $result->getColumnMeta($i);
+            $fields[ $f['name'] ] = new Field( $f );
         }
         
         return $fields;
@@ -312,7 +320,7 @@ class Query {
      * @param int $connectionsId Id da connection DEFAULT=NULL
      * @return boolean|string
      */
-    static public function lastInsertId($connectionsId = null){
+    static public function lastInsertId($connectionsId = null,$name=null){
         $pdo = static::connect($connectionsId);
         
         return ((!$pdo)? false : $pdo->lastInsertId($name));

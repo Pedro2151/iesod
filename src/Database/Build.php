@@ -21,7 +21,10 @@ class Build {
         $this->columns = is_array($columns) ? $columns : func_get_args();
         return $this;
     }
-    
+    public function id($id){
+        $this->id = $id;
+        return $this;
+    }
     public function joinLeft($table, $first, $operator , $secund){
         $this->join[] = "LEFT JOIN {$table} ON {$first} {$operator} {$secund}";
         return $this;
@@ -32,6 +35,10 @@ class Build {
     }
     public function where($field,$operator,$secund = null,$third = null){
         $this->where[] = [$field,$operator,$secund,$third];
+        return $this;
+    }
+    public function whereExpression($expression, $bindData = null){
+        $this->where[] = new WhereExpression($expression, $bindData);
         return $this;
     }
     public function whereIsNull($field){
@@ -61,14 +68,27 @@ class Build {
         if(empty($this->columns)){
             $sql .= "*";
         } else { 
-            $sql .= implode(",", $this->columns);
+			$sep = '';
+			foreach($this->columns as $col){
+				if(is_object($col) && get_class($col)=='Iesod\Database\Raw')
+					$sql .= $sep.$col->value;
+				else
+					$sql .= $sep.$col;
+				$sep = ',';
+			}
         }
         $sql .= " FROM ";
         $sql .= implode(",", $this->from)." ";
         $sql .= implode(" \n", $this->join)." ";
-        if(!empty($this->where)){
+		$where = $this->where;
+		
+		if(!is_null($this->id))
+			$where[] = [$this->primaryKey, '=' , $this->id] ;
+		
+		
+        if(!empty($where)){
             $sql .= "WHERE 1 AND ";
-            $sql .= Query::whereTransform($this->where,$bindData)." ";
+            $sql .= Query::whereTransform($where,$bindData)." ";
         }
         if(!empty($this->order)){
             $sql .= "ORDER BY ";
@@ -84,7 +104,7 @@ class Build {
         $id = $id ?? $this->id;
         $this->where($this->primaryKey, '=', $id);
         $result = $this->get();
-        if($result===false || $result->rowCount()==0)
+        if($result==false || $result->rowCount()==0)
             return false;
         
         return $result->fetch( \PDO::FETCH_ASSOC );
