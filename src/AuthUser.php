@@ -12,6 +12,9 @@ class AuthUser {
     public function getId(){
         return $this->dataUser['id_user'] ?? false;
     }
+    public function getUserGroup(){
+        return $this->dataUser['usergroup'] ?? false;
+    }
     public function getUsername(){
         return $this->dataUser['username'] ?? false;
     }

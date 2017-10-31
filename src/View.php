@@ -1,11 +1,14 @@
 <?php namespace Iesod;
 
 class View {
-    static function get($view, $data = []){
+    static function get($view, $data = [],$fileLang = null){
         $dir = DIR_ROOT.(Application::$pathModule)."View";
         $filename = str_replace("/", DIRECTORY_SEPARATOR, "{$dir}/{$view}");
         
         $lang = Application::getDataLang();
+        if(!is_null($fileLang))
+            $data['lang'] = Application::getDataLang( $fileLang );
+        
         $Auth = Auth::getUser();
         if($Auth===false)
             $user = false;

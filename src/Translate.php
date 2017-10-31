@@ -24,8 +24,17 @@ class Translate {
         $Session->__destruct();
     }
     static function getDataByFile($filename, $silence = false){
-        if( is_file($filename) ){
-            return include($filename);            
+        $lang = static::$lang;
+        $filename1 = str_replace("{lang}", $lang, $filename);
+        $filename1 = str_replace(['/',"\\"], DIRECTORY_SEPARATOR, $filename1);
+        
+        $filename2 = str_replace("{lang}", env("APP_LANGUAGE",'en'), $filename);
+        $filename2 = str_replace(['/',"\\"], DIRECTORY_SEPARATOR, $filename2);
+        
+        if( is_file($filename1) ){
+            return include($filename1);
+        } elseif( is_file($filename2) ){
+            return include($filename2);
         } elseif(!$silence){
             throw new \Exception("File not found");
         }

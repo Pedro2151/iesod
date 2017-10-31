@@ -4,6 +4,9 @@ use Iesod\Database\Model;
 
 
 class Auth {
+    const USERGROUP_USER = 0;
+    const USERGROUP_ADMIN = 1;
+    
     static $AuthData;
     private $User;
     
@@ -54,6 +57,16 @@ class Auth {
         } catch (\Exception $e) {
             return false;
         }
+    }
+    
+    static function getUserId($default = null){
+        $AuthUser = static::getUser();
+        return ($AuthUser===false) ? $default : $AuthUser->getId() ;
+    }
+    
+    static function getUserGroup($default = -1){
+        $AuthUser = static::getUser();
+        return ($AuthUser===false) ? $default : $AuthUser->getUserGroup() ;
     }
     /** Execute signIn
      * 

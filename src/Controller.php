@@ -5,7 +5,7 @@ class Controller{
     public function __construct(){
 	    
 	}
-	public function returnAjax($data,$strError = "",$codeError = 0,$status = true){
+	public static function returnAjax($data,$strError = "",$codeError = 0,$status = true){
 	    $r = [
 	        'status' => $status,
 	        'strError' => $strError,
@@ -15,8 +15,8 @@ class Controller{
 	    
 	    return $r;
 	}
-	public function returnAjaxError($strError,$codeError = 0, $data = []){
-	    return $this->returnAjax($data,$strError,$codeError,false);
+	public static function returnAjaxError($strError,$codeError = 0, $data = []){
+	    return static::returnAjax($data,$strError,$codeError,false);
 	}
 	/**
 	 * 

@@ -37,7 +37,7 @@ class Application{
 		Translate::setLang($lang);
 		static::$lang = Translate::$lang;
 	}
-	static function getDataLang(){
-	    return Translate::getData();
+	static function getDataLang($filename = null){
+	    return is_null($filename)? Translate::getData() : Translate::getDataByFile($filename);
 	}
 }
