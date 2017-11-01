@@ -100,16 +100,16 @@ class Build {
         
         return Query::query($sql,$bindData,$this->connectionId);
     }
-    public function find($id = null){
+    public function find($id = null,$fetch_style = null){
         $id = $id ?? $this->id;
         $this->where($this->primaryKey, '=', $id);
         $result = $this->get();
         if($result==false || $result->rowCount()==0)
             return false;
         
-        return $result->fetch( \PDO::FETCH_ASSOC );
+        return $result->fetch(  $fetch_style??\PDO::FETCH_ASSOC );
     }
-    public function first(){
+    public function first($fetch_style = null){
         $start = $this->start;
         $limit = $this->limit;
         $this->start = 0;
@@ -123,7 +123,7 @@ class Build {
         if($result->rowCount()==0)
             return false;
             
-        return $result->fetch( \PDO::FETCH_ASSOC );
+        return $result->fetch( $fetch_style??\PDO::FETCH_ASSOC );
     }
     public function insert($data,$returnInsertId = true){
         $result = Query::insert($data, implode(",", $this->from),$this->connectionId,$returnInsertId);

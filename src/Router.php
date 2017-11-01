@@ -39,8 +39,11 @@ class Router {
     }
     public static function any($request, $controller, AccessPolicyInterface $AccessPolicy = null){
         $r = explode('/', strtolower( self::$prefix.$request ));
-        $rUrl = explode('/', strtolower( $_SERVER['REQUEST_URI']) );
-        
+        list($uri) = explode("?", $_SERVER['REQUEST_URI']);
+        $rUrl = explode('/', strtolower( $uri ) );
+        if(count($r)<count($rUrl))
+			return false;
+		
         $p = [];
         $pattern = '/^\{([^?]+)([?])?\}$/';
         foreach ($r as $i=>$v){
@@ -72,7 +75,7 @@ class Router {
             'method' => $_SERVER['REQUEST_METHOD'],
             'route' => self::$prefix.$request,
             'controller' => $controller,
-            'request_uri' => strtolower( $_SERVER['REQUEST_URI'])
+            'request_uri' => strtolower( $uri )
         ];
         
         if(is_null($AccessPolicy)){
@@ -90,11 +93,12 @@ class Router {
     }
     public static function unknown($controller,$args = []){
         if(is_null(static::$data)){
+            list($uri) = explode("?", $_SERVER['REQUEST_URI']);
             static::$data = [
                 'method' => $_SERVER['REQUEST_METHOD'],
                 'route' => null,
                 'controller' => $controller,
-                'request_uri' => strtolower( $_SERVER['REQUEST_URI'])
+                'request_uri' => strtolower( $uri )
             ];
         }
         

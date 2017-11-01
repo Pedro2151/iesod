@@ -182,6 +182,10 @@ class Model implements ModelInterface {
         $r = static::Build();
         return $r->where($first, $operator , $secund);
     }
+    static function whereExpression($expression, $bindData = null){
+        $r = static::Build();
+        return $r->whereExpression($expression,$bindData);
+    }
     static function whereIsNull($field){
         $r = static::Build();
         return $r->whereIsNull($field);
@@ -194,18 +198,19 @@ class Model implements ModelInterface {
         $r = static::Build();
         return $r->whereRaw($where);
     }
+    
     static function order($field, $order = "ASC"){
         $r = static::Build();
         return $r->order($field, $order);
     }
-    static function find($id){
+    static function find($id,$fetch_style = null){
         $r = static::Build($id);
-        return $r->find($id);
+        return $r->find($id,$fetch_style);
     }
-    static function first(){
+    static function first($fetch_style = null){
         $r = static::Build();
         
-        return $r->first();
+        return $r->first($fetch_style);
     }
     static function get(){
         $r = static::Build();

@@ -7,6 +7,11 @@ class Application{
     static $module;
     static $pathModule;
     static $dirModule;
+    /**
+     * 
+     * @var integer 0 - View error / 1 - json
+     */
+    static $typeReturnError = 0;
     public function __construct($module){
         \Iesod\Database\Query::setConnection(
             env('DB_DATABASE','iesod'),
