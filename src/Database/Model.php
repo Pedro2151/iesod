@@ -216,12 +216,11 @@ class Model implements ModelInterface {
         $r = static::Build();
         return $r->get();
     }
-    static function insert($data,$returnInsertId = true){
+    public static function insert($data,$returnInsertId = true){
         $r = static::Build();
         return $r->insert($data,$returnInsertId);
     }
-    static function update($data,$id = null){
-        
+    public static function update($data,$id = null){        
         $r = static::Build($id);
         return $r->update($data);
     }

@@ -20,7 +20,7 @@ class Controller{
 	}
 	/**
 	 * 
-	 * @return \Iesod\Request
+	 * @return \Iesod\Request|\Iesod\RequestInterface
 	 */
 	public function request(){
 	    if(is_null($this->request))

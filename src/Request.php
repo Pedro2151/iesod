@@ -2,7 +2,7 @@
 
 use Iesod\Request\{Input,InputFile};
 
-class Request {
+class Request implements RequestInterface {
     public function __construct(){
         
     }

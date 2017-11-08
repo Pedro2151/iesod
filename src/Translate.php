@@ -36,7 +36,7 @@ class Translate {
         } elseif( is_file($filename2) ){
             return include($filename2);
         } elseif(!$silence){
-            throw new \Exception("File not found");
+            throw new \Exception("File not found".$filename1);
         }
         return false;
     }

@@ -109,7 +109,7 @@ class Query {
             if(!$query = $pdo->query($sql)){
 				list($handle, $codError, $StrError) = $pdo->errorInfo();
 				
-				throw new \Exception("Error: #{$codError}: {$StrError}",$codError);
+				throw new \Exception("Error: #{$codError}: {$StrError}<br />\r\n".$sql,$codError);
                 return false;
             }
         } else {
@@ -122,7 +122,7 @@ class Query {
             if(!$query->execute( $bindData )){
                 list($handle, $codError, $StrError) = $query->errorInfo();
 				
-                throw new \Exception("Error: #{$codError}: {$StrError}".json_encode($bindData),$codError);
+                throw new \Exception("Error: #{$codError}: {$StrError}<br />\r\n".$query->queryString,$codError);
                 return false;
             }
         }

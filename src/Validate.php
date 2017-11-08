@@ -77,7 +77,7 @@ class Validate
             throw new \Exception("'{$name}' length max={$param}");
     }
     static function username($value,$param,$name){
-        if(!static::regexp($value,"^[\w._-]+$", $name,true) || static::minlen($value, 8,$name))
+        if(!static::regexp($value,"^[\w._-]+$", $name,true) || static::minlen($value, 3,$name))
             throw new \Exception("'{$name}' invalid");
     }
     /** test: 1 | 1.2 | -1 | .1 | 1. 

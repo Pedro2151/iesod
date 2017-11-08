@@ -97,7 +97,6 @@ class Build {
         if(!is_null($this->start) && !is_null($this->limit)){
             $sql .= "LIMIT {$this->start},{$this->limit} ";
         }
-        
         return Query::query($sql,$bindData,$this->connectionId);
     }
     public function find($id = null,$fetch_style = null){

@@ -4,53 +4,54 @@ class Router {
     static $prefix = "";
     static $data;
     public static function prefix($prefix, $routers, AccessPolicyInterface $AccessPolicy = null){
-        $prefixBuffer = self::$prefix;
-        self::$prefix .= $prefix;
-        
+        $prefixBuffer = static::$prefix;
+        static::$prefix .= $prefix;
         $routers($AccessPolicy);
-        self::$prefix = $prefixBuffer;
+        static::$prefix = $prefixBuffer;
     }
     public static function get($request,$controller, AccessPolicyInterface $AccessPolicy = null){
        
        if(strtoupper($_SERVER['REQUEST_METHOD'])=="GET")
-           return self::any($request, $controller,$AccessPolicy);
+           return static::any($request, $controller,$AccessPolicy);
        
-        
-            
        return false;
     }
     public static function post($request,$controller, AccessPolicyInterface $AccessPolicy = null){
         if(strtoupper($_SERVER['REQUEST_METHOD'])=="POST")
-            return self::any($request, $controller,$AccessPolicy);
+            return static::any($request, $controller,$AccessPolicy);
             
             return false;
     }
     public static function put($request,$controller, AccessPolicyInterface $AccessPolicy = null){
         if(strtoupper($_SERVER['REQUEST_METHOD'])=="PUT")
-            return self::any($request, $controller,$AccessPolicy);
+            return static::any($request, $controller,$AccessPolicy);
             
             return false;
     }
     public static function delete($request,$controller, AccessPolicyInterface $AccessPolicy = null){
         if(strtoupper($_SERVER['REQUEST_METHOD'])=="DELETE")
-            return self::any($request, $controller,$AccessPolicy);
+            return static::any($request, $controller,$AccessPolicy);
             
             return false;
     }
     public static function any($request, $controller, AccessPolicyInterface $AccessPolicy = null){
-        $r = explode('/', strtolower( self::$prefix.$request ));
+        $r = explode('/', strtolower( static::$prefix.$request ));
+        $r1 = static::$prefix.$request;
+
         list($uri) = explode("?", $_SERVER['REQUEST_URI']);
         $rUrl = explode('/', strtolower( $uri ) );
         if(count($r)<count($rUrl))
 			return false;
-		
+        
         $p = [];
         $pattern = '/^\{([^?]+)([?])?\}$/';
+        
         foreach ($r as $i=>$v){
             preg_match_all($pattern, $v, $matches, PREG_SET_ORDER, 0);
             if(is_null($matches) || empty($matches)){
-                if(!isset($rUrl[$i]) || $v!=$rUrl[$i])
+                if(!isset($rUrl[$i]) || $v!=$rUrl[$i]){
                     return false;
+                }
             } else {
                 $var = $matches[0][1];
                 $require = !(isset($matches[0][2]) && $matches[0][2]=='?');
@@ -73,7 +74,7 @@ class Router {
         
         static::$data = [
             'method' => $_SERVER['REQUEST_METHOD'],
-            'route' => self::$prefix.$request,
+            'route' => static::$prefix.$request,
             'controller' => $controller,
             'request_uri' => strtolower( $uri )
         ];
