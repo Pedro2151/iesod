@@ -3,33 +3,103 @@
 class Router {
     static $prefix = "";
     static $data;
+    public static function getMethod(){
+        $method = ($_POST['_method'] ?? ($_GET['_method'] ?? $_SERVER['REQUEST_METHOD']));
+        $method = strtoupper($method);
+
+        return $method;
+    }
+    public static function checkMethod($method){
+        return static::getMethod()==strtoupper($method);
+    }
     public static function prefix($prefix, $routers, AccessPolicyInterface $AccessPolicy = null){
         $prefixBuffer = static::$prefix;
         static::$prefix .= $prefix;
         $routers($AccessPolicy);
         static::$prefix = $prefixBuffer;
     }
+    public static function resource($prefix, $controller,$options = [], AccessPolicyInterface $AccessPolicy = null){
+        $options['only'] = $options['only']?? [
+            'index',//GET /prefix
+            'create',//GET /prefix/create
+            'store',//POST /prefix
+            'show',//GET /prefix/{id}
+            'edit',//GET /prefix/{id}/edit
+            'update',//PUT /prefix/{id}
+            'destroy'//DELETE /prefix/{id}
+        ];
+        $options['except'] = $options['except']??[];
+        $options['AccessPolicy'] = $options['AccessPolicy'] ?? [];
+
+        $requests = [
+            'index' => [
+                'method' => 'GET',
+                'request' => "/".$prefix,
+                'AccessPolicy' => $options['AccessPolicy']['index']?? $AccessPolicy
+            ],
+            'create' => [
+                'method' => 'GET',
+                'request' => "/".$prefix."/create",
+                'AccessPolicy' => $options['AccessPolicy']['create']?? $AccessPolicy
+            ],
+            'store' => [
+                'method' => 'POST',
+                'request' => "/".$prefix,
+                'AccessPolicy' => $options['AccessPolicy']['store']?? $AccessPolicy
+            ],
+            'show' => [
+                'method' => 'GET',
+                'request' => "/".$prefix."/{id}",
+                'AccessPolicy' => $options['AccessPolicy']['show']?? $AccessPolicy
+            ],
+            'edit' => [
+                'method' => 'GET',
+                'request' => "/".$prefix."/{id}/edit",
+                'AccessPolicy' => $options['AccessPolicy']['edit']?? $AccessPolicy
+            ],
+            'update' => [
+                'method' => 'PUT',
+                'request' => "/".$prefix."/{id}",
+                'AccessPolicy' => $options['AccessPolicy']['update']?? $AccessPolicy
+            ],
+            'destroy' => [
+                'method' => 'DELETE',
+                'request' => "/".$prefix."/{id}",
+                'AccessPolicy' => $options['AccessPolicy']['destroy']?? $AccessPolicy
+            ]
+        ];
+        
+        foreach($requests as $i=>$data){
+            if(in_array($i,$options['only']) && !in_array($i,$options['except'])){
+                if(static::checkMethod($data['method'])){
+                    $r = static::any($data['request'], $controller."@{$i}",$data['AccessPolicy']);
+                    if($r!=false)
+                        return true;
+                }
+            }
+        }
+    }
     public static function get($request,$controller, AccessPolicyInterface $AccessPolicy = null){
        
-       if(strtoupper($_SERVER['REQUEST_METHOD'])=="GET")
+       if(static::checkMethod("GET"))
            return static::any($request, $controller,$AccessPolicy);
        
        return false;
     }
     public static function post($request,$controller, AccessPolicyInterface $AccessPolicy = null){
-        if(strtoupper($_SERVER['REQUEST_METHOD'])=="POST")
+        if(static::checkMethod("POST"))
             return static::any($request, $controller,$AccessPolicy);
             
             return false;
     }
     public static function put($request,$controller, AccessPolicyInterface $AccessPolicy = null){
-        if(strtoupper($_SERVER['REQUEST_METHOD'])=="PUT")
+        if(static::checkMethod("PUT"))
             return static::any($request, $controller,$AccessPolicy);
             
             return false;
     }
     public static function delete($request,$controller, AccessPolicyInterface $AccessPolicy = null){
-        if(strtoupper($_SERVER['REQUEST_METHOD'])=="DELETE")
+        if(static::checkMethod("DELETE"))
             return static::any($request, $controller,$AccessPolicy);
             
             return false;
@@ -39,6 +109,7 @@ class Router {
         $r1 = static::$prefix.$request;
 
         list($uri) = explode("?", $_SERVER['REQUEST_URI']);
+
         $rUrl = explode('/', strtolower( $uri ) );
         if(count($r)<count($rUrl))
 			return false;
@@ -73,7 +144,7 @@ class Router {
         }
         
         static::$data = [
-            'method' => $_SERVER['REQUEST_METHOD'],
+            'method' => static::getMethod(),
             'route' => static::$prefix.$request,
             'controller' => $controller,
             'request_uri' => strtolower( $uri )
@@ -96,7 +167,7 @@ class Router {
         if(is_null(static::$data)){
             list($uri) = explode("?", $_SERVER['REQUEST_URI']);
             static::$data = [
-                'method' => $_SERVER['REQUEST_METHOD'],
+                'method' => static::getMethod(),
                 'route' => null,
                 'controller' => $controller,
                 'request_uri' => strtolower( $uri )

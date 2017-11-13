@@ -60,6 +60,12 @@ class Request implements RequestInterface {
             }
         }
     }
+    public function put($name = null, $default = null, $returnValue = false){
+        return $this->post($name,$default,$returnValue);
+    }
+    public function delete($name = null, $default = null, $returnValue = false){
+        return $this->post($name,$default,$returnValue);
+    }
     public function file($name = null, $returnValue = false){
         if(is_null($name)){
             if($returnValue){
@@ -67,15 +73,13 @@ class Request implements RequestInterface {
             }
             
             $r = [];
-            if(is_uploaded_file()){
-                foreach ($_FILES as $name=>$value){
+            foreach ($_FILES as $name=>$value){
                     $r[$name] = $this->file($name);
-                }
             }
             
             return $r;
         } else {
-            if(!is_uploaded_file() || !isset($_FILES[$name]['error']))
+            if(!is_uploaded_file($_FILES[$name]['tmp_name']) || !isset($_FILES[$name]['error']))
                 throw new \Exception('No file was uploaded',UPLOAD_ERR_NO_FILE);
             
             if($returnValue)

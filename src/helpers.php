@@ -64,3 +64,9 @@ function validate($data,$validations){
     
     return (new Validate($data,$validations))->validate();
 }
+function method_put(){
+    return '<input type="hidden" name="_method" value="put" />';
+}
+function method_delete(){
+    return '<input type="hidden" name="_method" value="delete" />';
+}

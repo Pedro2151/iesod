@@ -22,6 +22,7 @@ class Field {
     const TYPE_DATETIME = 5;
     const TYPE_TIME     = 6;
     const TYPE_TIMESTAMP = 7;
+    const TYPE_BOOLEAN = 8;
     
     public function __construct($columnMeta){
         $this->table = $columnMeta['table']??null;

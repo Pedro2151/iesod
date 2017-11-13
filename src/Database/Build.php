@@ -142,4 +142,13 @@ class Build {
         
         return Query::update($data,implode(",", $this->from), $this->where,$limit,implode(",", $this->order),$this->connectionId);
     }
+    public function delete(){
+        if(!is_null($this->start) && !is_null($this->limit)){
+            $limit = "{$this->start},{$this->limit}";
+        } else {
+            $limit = null;
+        }
+
+        return Query::delete(implode(",", $this->from),$this->where,$limit,implode(",", $this->order),$this->connectionId);
+    }
 }

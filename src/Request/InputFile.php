@@ -57,11 +57,11 @@ class InputFile {
     public function extension($extensions,$msgError = null,$codError = null){
         if($this->multiFiles){
             foreach ($this->file['name'] as $name){
-                if(!preg_match ("/.*[.]({$extensions})$/" , $name ))
+                if(!preg_match ("/.*[.]({$extensions})$/" , strtolower($name) ))
                     throw new \Exception($msgError??"File upload stopped by extension" ,$codError??UPLOAD_ERR_EXTENSION);
             }
         } else {
-            if(!preg_match ("/.*[.]({$extensions})$/" , $this->file['name'] ))
+            if(!preg_match ("/.*[.]({$extensions})$/" , strtolower($this->file['name']) ))
                 throw new \Exception($msgError??"File upload stopped by extension" ,$codError??UPLOAD_ERR_EXTENSION);
         }
             
@@ -91,7 +91,7 @@ class InputFile {
             if( is_null($index) )
                 throw new \Exception("Index of file is required" ,0);
             
-                return move_uploaded_file($this->file['tmp_name'][$index], $filename);
+            return move_uploaded_file($this->file['tmp_name'][$index], $filename);
         } else {
             return move_uploaded_file($this->file['tmp_name'],  $filename);
         }

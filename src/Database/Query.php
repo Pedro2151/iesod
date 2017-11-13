@@ -242,6 +242,30 @@ class Query {
         
         return static::query($sql,$bindData);
     }
+    /**
+     * 
+     * @param string $table
+     * @param string|array $where
+     * @param string $limit Limit(like sql) DEFAULT=NULL
+     * @param string $orderBy Order By(Like sql) DEFAULT=NULL
+     * @param int $connectionsId Id da connection DEFAULT=NULL
+     * @return boolean|\PDOStatement
+     */
+    static function delete($table,$where,$limit = null,$orderBy = null,$connectionsId = null){
+        $bindData = [];
+        
+        $Where = static::whereTransform($where, $bindData);
+        
+        $sql = "DELETE FROM `{$table}` WHERE {$Where}";
+        if(!is_null($orderBy) && !empty($orderBy)){
+            $sql .= " ORDER BY {$orderBy}";
+        }
+        if(!empty($limit) && preg_match('/^([0-9]+)\s*([,]\s*[0-9]+)?$/', $limit)){
+            $sql .= " LIMIT {$limit}";
+        }
+        
+        return static::query($sql,$bindData);
+    }
     static function whereTransform($where, &$bindData = []){
         $Where = '';
         if(is_array($where)){
