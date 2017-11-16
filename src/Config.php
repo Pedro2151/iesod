@@ -1,5 +1,7 @@
 <?php namespace Iesod;
 
+use Iesod\ConfigModel;
+
 class Config {
     static $config;
     static function open($filenameEnv = null){
@@ -33,6 +35,12 @@ class Config {
             }
         }
     }
+    static function getByModel($name, $default = null){
+        return ConfigModel::getConfig($name,$default);
+    } 
+    static function setByModel($name, $value = null){
+        ConfigModel::setConfig($name,$value);
+    } 
     static function get($name, $default = null){
         if(is_null(static::$config))
             static::open();

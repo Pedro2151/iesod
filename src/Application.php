@@ -13,6 +13,9 @@ class Application{
      */
     static $typeReturnError = 0;
     public function __construct($module){
+        
+		csrfCheck();
+	  
         \Iesod\Database\Query::setConnection(
             env('DB_DATABASE','iesod'),
             null,
@@ -27,13 +30,16 @@ class Application{
 		static::$pathModule = "/Apps/{$module}/";
 		static::setLang();
 		static::$lang = Translate::$lang;
+		$dirModule = DIR_ROOT.(static::$pathModule);
 		
-		static::$dirModule = str_replace(
+		
+		$dirModule = str_replace(
 		    "/",
 		    DIRECTORY_SEPARATOR,
-		    DIR_ROOT.static::$pathModule);
-		if(is_file(static::$dirModule."Router.php"))
-		    require_once static::$dirModule."Router.php";
+		    $dirModule);
+		static::$dirModule = $dirModule;
+		if(is_file($dirModule."Router.php"))
+		   require_once $dirModule."Router.php";
 		else 
 		    throw new \Exception(
                 "Route file not found in ".static::$dirModule."Router.php");

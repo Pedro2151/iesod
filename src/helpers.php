@@ -6,7 +6,31 @@ function config($name, $default = null){
 }
 function env($name, $default = null){
     return \Iesod\Config::get($name,$default);
+}//e4292128a12759205f9e52928061e076d553c4a6f0261436960e5428fa5b4b31
+function getTranslate($filename){
+    return \Iesod\Translate::getDataByFile($filename, false);
 }
+function randomString($length = 32) {
+	if(function_exists('random_bytes')){
+		$randomString = bin2hex( random_bytes($length) );
+	} elseif(function_exists('mcrypt_create_iv')){
+		$randomString = bin2hex(mcrypt_create_iv($length, MCRYPT_DEV_URANDOM));
+	} elseif(function_exists('openssl_random_pseudo_bytes')){
+		$randomString = bin2hex(openssl_random_pseudo_bytes($length));
+	} else {
+		$randomString = bin2hex( md5( uniqid( rand(), true ) ) );
+	}
+	
+	return substr($randomString,0,$length);
+	/*
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++)
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+
+    return $randomString;*/
+} 
 function encrypt(
     $data,
     $method=null,
@@ -69,4 +93,85 @@ function method_put(){
 }
 function method_delete(){
     return '<input type="hidden" name="_method" value="delete" />';
+}
+function session(){
+    return new \Iesod\Session();
+}
+function sessionId(){
+    return (new \Iesod\Session())->getId();
+}
+function sessionCreateId($cloneData = false){
+    return (new \Iesod\Session())->createId($cloneData);
+}
+function sessionClose(){
+    return (new \Iesod\Session())->close();
+}
+function sessionGetData($name = null){
+    return (new \Iesod\Session())->get($name);
+}
+function sessionPut($value, $name = null, $forceType = false){
+    return (new \Iesod\Session())->put($value, $name, $forceType);
+}
+function sessionPutAppend($value, $name, $forceType = false){
+    return (new \Iesod\Session())->putAppend($value, $name, $forceType);
+}
+function csrfInput(){
+    return '<input type="hidden" name="csrf-token" value="KbyUmhTLMpYj7CD2di7JKP1P3qmLlkPt" />';
+
+}
+function csrfGet(){
+    $csrf = $_COOKIE["CSRF-TOKEN"]?? null;
+
+    if(empty($csrf) || is_null($csrf))
+      $csrf = csrfCreate();
+
+    return $csrf;
+}
+function csrfCheck(){
+    $domainsCSRF = env('DOMAINS_CSRF','*');
+    if($domainsCSRF=='*')
+        return true;
+    $domainsCSRF = explode(',',$domainsCSRF);
+    $publicCSRF = env('PUBLIC_CSRF','');
+    $csrf = csrfGet();
+    $h = getallheaders();
+
+    $csrfRequest = $_POST['csrf-token']?? null;
+    if( is_null($csrfRequest) )
+      $csrfRequest = $h['X-CSRF-TOKEN']?? null;
+    
+    if ($csrfRequest===$csrf){
+        header('Access-Control-Allow-Origin: *');
+        return true;
+    } else {
+        if(\Iesod\Router::getMethod()=="GET"){
+            header('Access-Control-Allow-Origin: *');
+           return true;
+        } else {
+            $referer = $_SERVER['HTTP_REFERER']?? '';
+            preg_match("/^([h][t][t][p][s]{0,1})[:][\/]{2}([^\/]+)(\/.*)/",$referer,$m);
+            $scheme = $m[1]?? 'http';
+            $domain = $m[2]?? 'none';
+            foreach($domainsCSRF as $domainAllow){
+                if($domain==$domainAllow)
+                    return true;
+            }
+            if($publicCSRF==$csrfRequest){
+                return true;
+            }
+        }
+        http_response_code(400);
+        exit;
+    }
+
+    header('Access-Control-Allow-Origin: *');
+    return true;
+}
+function csrfCreate($length = 32){
+    $csrf = randomString($length);
+    setcookie('CSRF-TOKEN', $csrf , 0,"/");
+    return $csrf;
+    /**
+    cookieName: 'CSRF-TOKEN',
+    headerName: 'X-CSRF-TOKEN',*/
 }

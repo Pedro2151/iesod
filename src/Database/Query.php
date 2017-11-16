@@ -179,16 +179,26 @@ class Query {
         $fields = "";
         $values = "";
         $sep = "";
+        $i = 0;
         foreach ($data as $field=>$value){
-            $fields .= "{$sep}`{$field}`";
+            $f = explode(".",$field);
+            if(count($f)==2){
+                $Field = "`{$f[0]}`.`{$f[1]}`";
+            } else {
+                $Field = "`{$f[0]}`";
+            }
+            $bindName = "f{$i}";
+
+            $fields .= "{$sep}{$Field}";
             if( is_null($value) ){
                 $values .= "{$sep}NULL";
             } else {
                 if(is_object($value) && get_class($value)=='Iesod\Database\Raw'){
                     $values .= "{$sep}".$value->value;
                 } else {
-                    $values .= "{$sep}:{$field}";
-                    $bindData[':'.$field] = $value;
+                    $values .= "{$sep}:{$bindName}";
+                    $bindData[':'.$bindName] = $value;
+                    $i++;
                 }
                 
             }
@@ -215,17 +225,25 @@ class Query {
         $bindData = [];
         $values = "";
         $sep = "";
+        $i = 0;
         foreach ($data as $field=>$value){
+            $f = explode(".",$field);
+            if(count($f)==2){
+                $Field = "`{$f[0]}`.`{$f[1]}`";
+            } else {
+                $Field = "`{$f[0]}`";
+            }
+            $bindName = "f{$i}";
             if( is_null($value) ){
-                $values .= "{$sep}`{$field}` = NULL";
+                $values .= "{$sep}{$Field} = NULL";
             } else {
                 if(is_object($value) && get_class($value)=='Iesod\Database\Raw'){
-                    $values .= "{$sep}`{$field}` = ".$value->value;
+                    $values .= "{$sep}{$Field} = ".$value->value;
                 } else {
-                    $values .= "{$sep}`{$field}` = :{$field}";
-                    $bindData[':'.$field] = $value;
+                    $values .= "{$sep}{$Field} = :{$bindName}";
+                    $bindData[':'.$bindName] = $value;
+                    $i++;
                 }
-                
             }
             $sep = ",";
         }
@@ -268,8 +286,16 @@ class Query {
     }
     static function whereTransform($where, &$bindData = []){
         $Where = '';
+        /*$f = explode(".",$field);
+            if(count($f)==2){
+                $Field = "`{$f[0]}`.`{$f[1]}`";
+            } else {
+                $Field = "`{$f[0]}`";
+            }
+            $bindName = "f{$i}";*/
         if(is_array($where)){
             $sep = "";
+            $iBindName = 0;
             foreach ($where as $w){
                 if(is_object($w) && get_class($w)=='Iesod\Database\Raw'){
                     $Where .= "{$sep}".$w->value;
@@ -277,9 +303,17 @@ class Query {
                     $Where .= "{$sep}(".$w->expression.")";
                     $bindData = array_merge($bindData, $w->bindData);
                 } else {
+                    $f = explode(".",$w[0]);
+                    if(count($f)==2){
+                      $Field = "`{$f[0]}`.`{$f[1]}`";
+                    } else {
+                      $Field = "`{$f[0]}`";
+                    }
                     if(isset($w[2]) && !is_null($w[2]) ){
+                        if(is_null($w[1]))
+                            $w[1] = "=";
                         if($w[1]=='BETWEEN'){
-                            $Where .= "{$sep}(`{$w[0]}` {$w[1]} ";
+                            $Where .= "{$sep}({$Field} {$w[1]} ";
                             $Sep = "";
                             if(!isset($w[3]))
                                 throw new \Exception("Third index undefined in where");
@@ -288,23 +322,29 @@ class Query {
                                     if(is_object($w[$i]) && get_class($w[$i])=='Iesod\Database\Raw'){
                                         $Where .= $Sep.$w[$i]->value;
                                     } else {
-                                        $nameBind = ":w".($i-2)."_".$w[0];
-                                        $Where .= $Sep."'{$nameBind}'";
-                                        $bindData[$nameBind] = $w[$i];
+                                        $bindName = "w{$iBindName}";
+                                        $Where .= $Sep.":{$bindName}";
+                                        $bindData[":{$bindName}"] = $w[$i];
+                                        $iBindName++;
                                     }
                                     $Sep = " AND ";
                                 }
                                 $Where .= ")";
                         } else {
                             if(is_object($w[2]) && get_class($w[2])=='Iesod\Database\Raw'){
-                                $Where .= "{$sep}`{$w[0]}` {$w[1]} ".$w[2]->value;
+                                $Where .= "{$sep}{$Field} {$w[1]} ".$w[2]->value;
                             } else {
-                                $Where .= "{$sep}`{$w[0]}` {$w[1]} :w_{$w[0]}";
-                                $bindData[':w_'.$w[0] ] = $w[2];
+                                $bindName = "w{$iBindName}";
+                                $Where .= "{$sep}{$Field} {$w[1]} :{$bindName}";
+                                $bindData[":{$bindName}"] = $w[2];
+                                $iBindName++;
                             }
                         }
                     } else {//IS NULL ...
-                        $Where .= "{$sep}`{$w[0]}` {$w[1]}";
+                        if(is_null($w[1]))
+                            $w[1] = "IS NULL";
+
+                        $Where .= "{$sep}{$Field} {$w[1]}";
                     }
                 }
                 $sep = " AND ";

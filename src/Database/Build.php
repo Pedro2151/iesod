@@ -55,7 +55,13 @@ class Build {
         return new Raw($value);
     }
     public function order($field, $order = "ASC"){
-        $this->order[] = "`{$field}` {$order}";
+        $f = explode('.',$field);
+        if(count($f)==2 && !empty($f[1]))
+            $field = "{$f[0]}.`{$f[1]}`";
+        else
+            $field = "`{$f[0]}`";
+            
+        $this->order[] = "{$field} {$order}";
         return $this;
     }
     /** Execulta select

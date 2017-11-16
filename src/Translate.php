@@ -10,7 +10,13 @@ class Translate {
         if(is_null($lang)){
             $langSession = $Session->get('lang',null);
             if(is_null($langSession)){
-                $lang = Config::get('APP_LANGUAGE', self::ENGLISH);//Set default
+                $lang = Config::getByModel(
+                    "LANGUAGE",
+                    Config::get(
+                        'APP_LANGUAGE',
+                        self::ENGLISH
+                    )
+                );//Set default
             }
         }
         
