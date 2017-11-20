@@ -5,6 +5,6 @@ class WhereExpression{
     public $bindData;
     public function __construct($expression,$bindData = null){
         $this->expression = $expression;
-        $this->bindData = $bindData;
+        $this->bindData = is_null($bindData)?[]:$bindData;
     }
 }
