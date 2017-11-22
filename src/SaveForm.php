@@ -58,6 +58,15 @@ class SaveForm{
         
         return $this;
     }
+    public function setFieldValue($fieldname, $value, $name = null){
+        if(is_null($name))
+            $name = $fieldname;
+
+        $this->set($name,$value);
+        $this->setFieldname($fieldname,$name);
+
+        return $this;
+    }
     public function addInput($name, $validate,$fieldname = null,$default = null,$method = null){
         $method = strtoupper( $method?? 'POST' );
         
@@ -73,6 +82,7 @@ class SaveForm{
         
         return $this;
     }
+    
     public function preg_replace($name, $pattern, $replacement){
         $this->set(
             $name,
