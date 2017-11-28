@@ -127,8 +127,32 @@ class Model implements ModelInterface {
             return $this;
     }
     static function Build($id = null){
+        
         $m = new static($id);
-        $r = new Build();
+        $r = new class($m) extends Build{
+            public $Model;
+            public function __construct($Model){
+                $this->Model = $Model;
+            }
+            public function afterInsert($id = null, $data = []){
+                $this->Model->afterInsert($id, $data);
+            }
+            public function beforeInsert(&$data = []){
+                $this->Model->beforeInsert($data);
+            }
+            public function afterUpdate($id = null, $data = []){
+                $this->Model->afterUpdate($id, $data);
+            }
+            public function beforeUpdate($id = null, &$data = []){
+                $this->Model->beforeUpdate($id, $data);
+            }
+            public function afterDelete($id = null){
+                $this->Model->afterDelete($id, $data);
+            }
+            public function beforeDelete($id = null){
+                $this->Model->beforeDelete($id, $data);
+            }
+        };
         $r->connectionId = $m->getConnectionId();
         $r->from[] = $m->getTable();
         $r->primaryKey = $m->getPrimaryKey();
@@ -203,6 +227,10 @@ class Model implements ModelInterface {
         $r = static::Build();
         return $r->order($field, $order);
     }
+    static function groupby($field){
+        $r = static::Build();
+        return $r->groupby($field);
+    }
     static function find($id,$fetch_style = null){
         $r = static::Build($id);
         return $r->find($id,$fetch_style);
@@ -216,12 +244,33 @@ class Model implements ModelInterface {
         $r = static::Build();
         return $r->get();
     }
+
+    public function afterInsert($id = null, $data = []){
+        
+    }
+    public function beforeInsert(&$data = []){
+
+    }
+    public function afterUpdate($id = null, $data = []){
+        
+    }
+    public function beforeUpdate($id = null, &$data = []){
+
+    }
+    public function afterDelete($id = null){
+        
+    }
+    public function beforeDelete($id = null){
+
+    }
     public static function insert($data,$returnInsertId = true){
         $r = static::Build();
-        return $r->insert($data,$returnInsertId);
+        $result = $r->insert($data,$returnInsertId);
+        return $result;
     }
     public static function update($data,$id = null){        
         $r = static::Build($id);
-        return $r->update($data);
+        $result = $r->update($data);
+        return $result;
     }
 }

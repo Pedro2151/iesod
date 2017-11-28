@@ -9,6 +9,7 @@ class Build {
     public $join = [];
     public $where = [];
     public $order = [];
+    public $group = [];
     public $start;
     public $limit;
     /**
@@ -64,6 +65,15 @@ class Build {
         $this->order[] = "{$field} {$order}";
         return $this;
     }
+    public function groupby($field){
+        $f = explode('.',$field);
+        if(count($f)==2 && !empty($f[1]))
+            $field = "{$f[0]}.`{$f[1]}`";
+        else
+            $field = "`{$f[0]}`";
+        $this->group[] = "{$field}";
+        return $this;
+    }
     /** Execulta select
      * 
      * @return boolean|\PDOStatement
@@ -95,6 +105,10 @@ class Build {
         if(!empty($where)){
             $sql .= "WHERE 1 AND ";
             $sql .= Query::whereTransform($where,$bindData)." ";
+        }
+        if(!empty($this->group)){
+            $sql .= "GROUP BY ";
+            $sql .= implode(",", $this->group)." ";
         }
         if(!empty($this->order)){
             $sql .= "ORDER BY ";
@@ -130,12 +144,37 @@ class Build {
             
         return $result->fetch( $fetch_style??\PDO::FETCH_ASSOC );
     }
+    public function afterInsert($id = null, $data = []){
+        
+    }
+    public function beforeInsert(&$data = []){
+
+    }
+    public function afterUpdate($id = null, $data = []){
+        
+    }
+    public function beforeUpdate($id = null, &$data = []){
+
+    }
+    public function afterDelete($id = null){
+        
+    }
+    public function beforeDelete($id = null){
+
+    }
     public function insert($data,$returnInsertId = true){
+        $this->beforeInsert($data);
         $result = Query::insert($data, implode(",", $this->from),$this->connectionId,$returnInsertId);
         if($returnInsertId && $result!=false){
             $this->id = $result;
+            $this->afterInsert($this->id, $data);
             return $this->id;
         } else {
+            if($result!=false){
+                $id = Query::lastInsertId($this->connectionId);
+                $this->id = $id;
+                $this->afterInsert($id, $data);
+            }
             return $result;
         }
     }
@@ -145,8 +184,18 @@ class Build {
         } else {
             $limit = null;
         }
-        
-        return Query::update($data,implode(",", $this->from), $this->where,$limit,implode(",", $this->order),$this->connectionId);
+        $this->beforeUpdate($this->id, $data);
+
+        $result = Query::update(
+            $data,
+            implode(",", $this->from),
+            $this->where,
+            $limit,
+            implode(",", $this->order),
+            $this->connectionId
+        );
+        $this->afterUpdate($this->id, $data);
+        return $result;
     }
     public function delete(){
         if(!is_null($this->start) && !is_null($this->limit)){
@@ -154,7 +203,16 @@ class Build {
         } else {
             $limit = null;
         }
+        $this->beforeDelete($this->id);
+        $result = Query::delete(
+            implode(",", $this->from),
+            $this->where,
+            $limit,
+            implode(",", $this->order),
+            $this->connectionId
+        );
+        $this->afterDelete($this->id);
 
-        return Query::delete(implode(",", $this->from),$this->where,$limit,implode(",", $this->order),$this->connectionId);
+        return $result;
     }
 }
