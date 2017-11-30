@@ -97,7 +97,13 @@ class SaveForm{
             );
         return $this;
     }
-    public function onlyNumbers($name,$float = false,$dec = null){
+    
+    public function unmaskphone($name){
+        $this->preg_replace($name, '/[^0-9+]/', '');
+        return $this;
+    }
+    public function onlyNumbers($name,$float = false,$dec = null,$unsigned = true){
+        
         if($float){
             $this->preg_replace($name, '/[^0-9.-]/', '');
             if(is_null($dec) || !is_int($dec)){
@@ -110,6 +116,9 @@ class SaveForm{
             $this->preg_replace($name, '/[^0-9-]/', '');
         }
         
+        if($unsigned)
+            $this->preg_replace($name, '/[^0-9.]/', '');
+
         return $this;
     }
     public function unmaskMoney($name, $dec = 2){

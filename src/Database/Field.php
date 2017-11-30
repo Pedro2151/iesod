@@ -21,9 +21,10 @@ class Field {
     const TYPE_DATE     = 4;
     const TYPE_DATETIME = 5;
     const TYPE_TIME     = 6;
-    const TYPE_TIMESTAMP = 7;
+    const TYPE_HIDDEN = 7;
     const TYPE_BOOLEAN = 8;
     const TYPE_COLORRGB = 9;
+    
     
     public function __construct($columnMeta){
         $this->table = $columnMeta['table']??null;
@@ -45,6 +46,7 @@ class Field {
                 $this->type = self::TYPE_FLOAT;
                 $this->pattern = '/^([-])?[0-9]+([.][0-9]+)?$/';
                 break;
+            case 'timestamp':
             case 'datetime':// 2017-09-26 01:20:59
                 $this->type = self::TYPE_DATETIME;
                 $this->pattern = '/^[12][0-9]{3}-([0][0-9]|[1][0-2])-([0-2][0-9]|[3][01]) (([0-1][0-9]|[2][0-3])[:][0-5][0-9][:][0-5][0-9])?$/';
@@ -56,10 +58,6 @@ class Field {
             case 'time':// 01:20:59
                 $this->type = self::TYPE_TIME;
                 $this->pattern = '/^([0-1][0-9]|[2][0-3])[:][0-5][0-9][:][0-5][0-9]$/';
-                break;
-            case 'timestamp':// 12345
-                $this->type = self::TYPE_TIMESTAMP;
-                $this->pattern = '/^[0-9]+$/';
                 break;
             case 'blob':
                 $this->type = self::TYPE_TEXT;
