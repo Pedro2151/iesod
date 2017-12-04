@@ -105,18 +105,25 @@ class Router {
             return false;
     }
     public static function any($request, $controller, AccessPolicyInterface $AccessPolicy = null){
-        $r = explode('/', strtolower( static::$prefix.$request ));
+        $R = explode('/', strtolower( static::$prefix.$request ));
+        $r = [];
+        foreach($R as $v){
+            if(!empty($v))
+                $r[] = $v;
+        }
         $r1 = static::$prefix.$request;
+        
 
         list($uri) = explode("?", $_SERVER['REQUEST_URI']);
-
+        if(substr($uri,0,1)=='/')
+            $uri = substr($uri,1);
         $rUrl = explode('/', strtolower( $uri ) );
+        
         if(count($r)<count($rUrl))
 			return false;
         
         $p = [];
         $pattern = '/^\{([^?]+)([?])?\}$/';
-        
         foreach ($r as $i=>$v){
             preg_match_all($pattern, $v, $matches, PREG_SET_ORDER, 0);
             if(is_null($matches) || empty($matches)){
