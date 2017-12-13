@@ -53,6 +53,19 @@ class Model implements ModelInterface {
     public function getFields(){
         return $this->fields;
     }
+    static function getFieldsNameValue(){
+        $m = new static();
+        $fields = $m->getFields();
+        if(!$fields)
+            return false;
+        
+        $data = [];
+        foreach($fields as $i=>$field){
+            $data[$i] = $field->getDefault();
+        }
+
+        return $data;
+    }
     /**
      * 
      * @param string $fieldName

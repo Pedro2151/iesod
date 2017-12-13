@@ -93,8 +93,8 @@ class Build {
 				$sep = ',';
 			}
         }
-        $sql .= " FROM ";
-        $sql .= implode(",", $this->from)." ";
+        $sql .= " FROM `";
+        $sql .= implode("`,`", $this->from)."` ";
         $sql .= implode(" \n", $this->join)." ";
 		$where = $this->where;
 		

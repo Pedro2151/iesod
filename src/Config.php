@@ -5,8 +5,14 @@ use Iesod\ConfigModel;
 class Config {
     static $config;
     static function open($filenameEnv = null){
-        if(is_null($filenameEnv))
-            $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
+        if(is_null($filenameEnv)){
+            if(!defined("ID_CLIENT"))
+                define('ID_CLIENT', 'public');
+
+            $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR."/config_cli/".ID_CLIENT.".env";
+            if(!is_file($filenameEnv))
+                $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
+        }
         
         if(!is_file($filenameEnv))
             throw new \Exception("Config File not found");
@@ -74,9 +80,14 @@ class Config {
         }
     }
     static function createDefaultFile($filenameEnv = null){
-        if(is_null($filenameEnv))
-            $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
-        
+        if(is_null($filenameEnv)){
+            if(!defined("ID_CLIENT"))
+                define('ID_CLIENT', 'public');
+
+            $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR."/config_cli/".ID_CLIENT.".env";
+            if(!is_file($filenameEnv))
+                $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
+        }
         $data = [
             'APP_NAME' => "",
             'APP_LANGUAGE' => Translate::ENGLISH,
@@ -109,9 +120,15 @@ class Config {
         return static::saveFileEnv($filenameEnv, $data);
     }
     static function saveFileEnv($filenameEnv = null, $data = []){
-        if(is_null($filenameEnv))
-            $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
-        
+        if(is_null($filenameEnv)){
+            if(!defined("ID_CLIENT"))
+            define('ID_CLIENT', 'public');
+            if(ID_CLIENT=='public'){
+                $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
+            } else {
+                $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR."/config_cli/".ID_CLIENT.".env";
+            }
+        }
         $content = "";
 
         $data['APP_NAME'] = $data['APP_NAME']?? "Iesod" ;

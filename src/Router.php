@@ -12,6 +12,46 @@ class Router {
     public static function checkMethod($method){
         return static::getMethod()==strtoupper($method);
     }
+    public static function checkUrl($request, $controller, &$params = []){
+        //request
+        $request = static::$prefix.$request;
+        $aRequest = explode('/', strtolower( $request ));
+        //uri
+        list($uri) = explode("?", $_SERVER['REQUEST_URI']);
+        $aUri = explode('/', $uri );
+
+        if(count($aUri)>count($aRequest))
+            return false;
+
+        $pattern = '/^\{([^?]+)([?])?\}$/';//{id} ou {id?}
+        $params = [];
+        foreach($aRequest as $i=>$part){
+            if(!preg_match($pattern, $part,$matches)){
+                if(!isset($aUri[$i]) || $part!=strtolower($aUri[$i]))
+                    return false;
+            } else {//Variavel
+                $require = !isset($matches[2]) || $matches[2]!='?';
+
+                if($require){
+                    if(isset($aUri[$i]) && $aUri[$i]!==''){
+                        $params[] = $aUri[$i];
+                    } else {
+                        return false;
+                    }
+                } else {
+                    $params[] = $aUri[$i]?? null;
+                }
+            }
+        }
+
+        static::$data = [
+            'method' => static::getMethod(),
+            'route' => $request,
+            'controller' => $controller,
+            'request_uri' => $uri
+        ];
+        return true;
+    }
     public static function prefix($prefix, $routers, AccessPolicyInterface $AccessPolicy = null){
         $prefixBuffer = static::$prefix;
         static::$prefix .= $prefix;
@@ -31,40 +71,43 @@ class Router {
         $options['except'] = $options['except']??[];
         $options['AccessPolicy'] = $options['AccessPolicy'] ?? [];
 
+        if($prefix!='' && substr($prefix,0,1)!='/')
+            $prefix = "/".$prefix;
+
         $requests = [
             'index' => [
                 'method' => 'GET',
-                'request' => "/".$prefix,
+                'request' => $prefix,
                 'AccessPolicy' => $options['AccessPolicy']['index']?? $AccessPolicy
             ],
             'create' => [
                 'method' => 'GET',
-                'request' => "/".$prefix."/create",
+                'request' => $prefix."/create",
                 'AccessPolicy' => $options['AccessPolicy']['create']?? $AccessPolicy
             ],
             'store' => [
                 'method' => 'POST',
-                'request' => "/".$prefix,
+                'request' => $prefix,
                 'AccessPolicy' => $options['AccessPolicy']['store']?? $AccessPolicy
             ],
             'show' => [
                 'method' => 'GET',
-                'request' => "/".$prefix."/{id}",
+                'request' => $prefix."/{id}",
                 'AccessPolicy' => $options['AccessPolicy']['show']?? $AccessPolicy
             ],
             'edit' => [
                 'method' => 'GET',
-                'request' => "/".$prefix."/{id}/edit",
+                'request' => $prefix."/{id}/edit",
                 'AccessPolicy' => $options['AccessPolicy']['edit']?? $AccessPolicy
             ],
             'update' => [
                 'method' => 'PUT',
-                'request' => "/".$prefix."/{id}",
+                'request' => $prefix."/{id}",
                 'AccessPolicy' => $options['AccessPolicy']['update']?? $AccessPolicy
             ],
             'destroy' => [
                 'method' => 'DELETE',
-                'request' => "/".$prefix."/{id}",
+                'request' => $prefix."/{id}",
                 'AccessPolicy' => $options['AccessPolicy']['destroy']?? $AccessPolicy
             ]
         ];
@@ -105,65 +148,17 @@ class Router {
             return false;
     }
     public static function any($request, $controller, AccessPolicyInterface $AccessPolicy = null){
-        $R = explode('/', strtolower( static::$prefix.$request ));
-        $r = [];
-        foreach($R as $v){
-            if(!empty($v))
-                $r[] = $v;
+        if(!static::checkUrl($request, $controller,$params)){
+            return false;
         }
-        $r1 = static::$prefix.$request;
-        
-
-        list($uri) = explode("?", $_SERVER['REQUEST_URI']);
-        if(substr($uri,0,1)=='/')
-            $uri = substr($uri,1);
-        $rUrl = explode('/', strtolower( $uri ) );
-        
-        if(count($r)<count($rUrl))
-			return false;
-        
-        $p = [];
-        $pattern = '/^\{([^?]+)([?])?\}$/';
-        foreach ($r as $i=>$v){
-            preg_match_all($pattern, $v, $matches, PREG_SET_ORDER, 0);
-            if(is_null($matches) || empty($matches)){
-                if(!isset($rUrl[$i]) || $v!=$rUrl[$i]){
-                    return false;
-                }
-            } else {
-                $var = $matches[0][1];
-                $require = !(isset($matches[0][2]) && $matches[0][2]=='?');
-                
-                if($require){
-                    if(isset($rUrl[$i])){
-                        $p[] = $rUrl[$i];
-                    } else {
-                        return false;
-                    }
-                } else {
-                    if(isset($rUrl[$i])){
-                        $p[] = $rUrl[$i];
-                    } else {
-                        $p[] = null;
-                    }
-                }
-            }
-        }
-        
-        static::$data = [
-            'method' => static::getMethod(),
-            'route' => static::$prefix.$request,
-            'controller' => $controller,
-            'request_uri' => strtolower( $uri )
-        ];
         
         if(is_null($AccessPolicy)){
-            static::unknown($controller,$p);
+            static::unknown($controller,$params);
         } else {
             try {
                 $AccessPolicy->testAccess();
                 $AccessPolicy->beforeSuccess();
-                static::unknown($controller,$p);
+                static::unknown($controller,$params);
             } catch (\Exception $e) {
                 $AccessPolicy->afterFail( $e->getCode(),$e->getMessage() );
                 throw $e;
