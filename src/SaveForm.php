@@ -36,7 +36,12 @@ class SaveForm{
         return $this;
     }
     public function implode($name,$glue){
-        $this->data[$name] = implode($glue, $this->data[$name]);
+        if(is_array($this->data[$name])){
+			
+			
+			
+            $this->data[$name] = implode($glue, $this->data[$name]);
+        }
         return $this;
     }
     public function setValidate($name, $validate = null){
