@@ -160,10 +160,10 @@ class Model implements ModelInterface {
                 $this->Model->beforeUpdate($id, $data);
             }
             public function afterDelete($id = null){
-                $this->Model->afterDelete($id, $data);
+                $this->Model->afterDelete($id);
             }
             public function beforeDelete($id = null){
-                $this->Model->beforeDelete($id, $data);
+                $this->Model->beforeDelete($id);
             }
         };
         $r->connectionId = $m->getConnectionId();

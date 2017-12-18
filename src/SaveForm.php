@@ -37,9 +37,6 @@ class SaveForm{
     }
     public function implode($name,$glue){
         if(is_array($this->data[$name])){
-			
-			
-			
             $this->data[$name] = implode($glue, $this->data[$name]);
         }
         return $this;

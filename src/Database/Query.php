@@ -86,6 +86,7 @@ class Query {
                 $password,
                 $options
             );
+            self::$connections[$connectionsId]->exec("SET time_zone = 'America/Sao_Paulo'");
         } catch (\PDOException $e) {
             self::$connections[$connectionsId] = null;
             throw new \Exception("Connection failed: " . utf8_encode( $e->getMessage() ).".");
