@@ -1,13 +1,34 @@
 <?php namespace Iesod;
 
 class View {
+    static function getDataLang($fileLang){
+        $files = [
+            Application::$dirModule."lang/{lang}/{$fileLang}",
+            Application::$dirModule."lang/{lang}/{$fileLang}.php",
+            Application::$dirModule."lang/{$fileLang}_{lang}",
+            Application::$dirModule."lang/{$fileLang}_{lang}.php"
+        ];
+        $i = 0;
+        $data = false;
+        while( !$data && $i<count($files)){
+            $data = Translate::getDataByFile($fileLang,true );
+            $fileLang =  $files[$i];
+            $i++;
+        }
+
+        if(!$data){
+            throw new \Exception("FileLang not found");
+        }
+
+        return $data;
+    }
     static function get($view, $data = [],$fileLang = null){
         $dir = DIR_ROOT.(Application::$pathModule)."View";
         $filename = str_replace("/", DIRECTORY_SEPARATOR, "{$dir}/{$view}");
         
         $lang = Application::getDataLang();
         if(!is_null($fileLang))
-            $data['lang'] = Application::getDataLang( $fileLang );
+            $data['lang'] = static::getDataLang($fileLang);
         
         $Auth = Auth::getUser();
         if($Auth===false)

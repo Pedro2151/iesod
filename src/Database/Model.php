@@ -53,6 +53,18 @@ class Model implements ModelInterface {
     public function getFields(){
         return $this->fields;
     }
+    static function beginTransaction(){
+        $m = new static();
+        return Query::beginTransaction($m->getConnectionId() );
+    }
+    static function commit(){
+        $m = new static();
+        return Query::commit($m->getConnectionId() );
+    }
+    static function rollBack(){
+        $m = new static();
+        return Query::rollBack($m->getConnectionId() );
+    }
     static function getFieldsNameValue(){
         $m = new static();
         $fields = $m->getFields();

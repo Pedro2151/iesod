@@ -95,6 +95,18 @@ class Query {
         
         return self::$connections[$connectionsId];
     }
+    static public function beginTransaction($connectionsId = null){
+        $pdo = static::connect($connectionsId);
+        return $pdo->beginTransaction();
+    }
+    static public function commit($connectionsId = null){
+        $pdo = static::connect($connectionsId);
+        return $pdo->commit();
+    }
+    static public function rollBack($connectionsId = null){
+        $pdo = static::connect($connectionsId);
+        return $pdo->rollBack();
+    }
     /** Execulta query sql
      * 
      * @param string $sql
