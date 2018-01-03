@@ -106,6 +106,7 @@ class SaveForm{
     }
     public function onlyNumbers($name,$float = false,$dec = null,$unsigned = true){
         
+        $this->replace($name, ',', '.');
         if($float){
             $this->preg_replace($name, '/[^0-9.-]/', '');
             if(is_null($dec) || !is_int($dec)){
