@@ -4,22 +4,33 @@ use Iesod\ConfigModel;
 
 class Config {
     static $config;
-    static function open($filenameEnv = null){
-        if(is_null($filenameEnv)){
+    static $envDefault = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
+    static function open($filename = null){
+        static::$config = static::getFileEnv(static::$envDefault);
+
+        if(is_null($filename)){
             if(!defined("ID_CLIENT"))
                 define('ID_CLIENT', 'public');
 
-            $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR."/config_cli/".ID_CLIENT.".env";
-            if(!is_file($filenameEnv))
-                $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
+            $filename = static::getFilenameClient(ID_CLIENT);
         }
-        
-        if(!is_file($filenameEnv))
-            throw new \Exception("Config File not found");
+
+        if(is_file($filename))
+            static::$config = array_merge(static::$config, static::getFileEnv($filename));
+    }
+    static function getFilenameClient($idClient){
+        return DIR_ROOT.DIRECTORY_SEPARATOR."config_cli".DIRECTORY_SEPARATOR.$idClient.".env";
+    }
+    static function getFileEnv($filename){
+        if(!is_file($filename)){
+            throw new \Exception("Config File not found\n".$filename);
+            return false;
+        }
             
-        $content = file_get_contents($filenameEnv);
+        $content = file_get_contents($filename);
         $content = str_replace(["\r\n","\n"], "\n",$content);
         $lines = explode("\n", $content);
+        $config = [];
         foreach ($lines as $numLine=>$line){
             if(preg_match(
                 "/^([a-zA-Z0-9_]+)\s*[=]\s*(.*)$/",
@@ -29,17 +40,18 @@ class Config {
                 $key = strtoupper( $m[1] );
                 $value = $m[2];
                 
-                static::$config[ $key ] = $value;
+                $config[ $key ] = $value;
             } elseif(preg_match(
                 "/^([a-zA-Z0-9_]+)\s*[=]{0,1}\s*$/",
                 $line,
                 $m)
             ){
-                $key = strtoupper( $m[1] );
-                
-                static::$config[ $key ] = NULL;
+                $key = strtoupper( $m[1] );                
+                $config[ $key ] = NULL;
             }
         }
+
+        return $config;
     }
     static function getByModel($name, $default = null){
         return ConfigModel::getConfig($name,$default);
@@ -79,16 +91,48 @@ class Config {
             );
         }
     }
-    static function createDefaultFile($filenameEnv = null){
-        if(is_null($filenameEnv)){
-            if(!defined("ID_CLIENT"))
-                define('ID_CLIENT', 'public');
+    static function createFileClient($idClient){
+        $config = static::getFileEnv(static::$envDefault);
 
-            $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR."/config_cli/".ID_CLIENT.".env";
-            if(!is_file($filenameEnv))
-                $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
-        }
         $data = [
+            //APP
+            'APP_URL' => $idClient.".".$config['APP_URL'],
+            'APP_LANGUAGE' => $config['APP_LANGUAGE'],
+            'APP_ENV' => $config['APP_ENV'],//or production
+            //CLIENT
+            'ID_CLIENT' => $idClient,
+            'FULLNAME_CLIENT' => '',
+            'ADDRESS_1' => '',
+            'ADDRESS_2' => '',
+            //STORAGE
+            'STORAGE_LIMIT' => $config['STORAGE_LIMIT'],
+            'STORAGE_PATH' => $config['STORAGE_PATH'],
+            //DATABASE
+            'DB_DRIVE' => 'mysql',
+            'DB_HOST' => $config['DB_HOST'],
+            'DB_PORT' => '3306',
+            'DB_DATABASE' => $idClient,
+            'DB_USERNAME' => $config['DB_USERNAME'],
+            'DB_PASSWORD' => $config['DB_PASSWORD']
+        ];
+
+        $filename = static::getFilenameClient($idClient);
+        return static::saveFileEnv($filename, $data);
+    }
+    static function updateFileClient($idClient, $data){
+        $filename = static::getFilenameClient($idClient);
+        $data = array_merge(
+            static::getFileEnv($filename),
+            $data
+        );
+        
+        return static::saveFileEnv($filename, $data);
+    }
+    static function createDefaultFile(){
+        $filename = static::$envDefault;            
+        
+        $data = [
+            //APP
             'APP_NAME' => "",
             'APP_LANGUAGE' => Translate::ENGLISH,
             'APP_ENV' => "local",//or production
@@ -96,44 +140,60 @@ class Config {
             'APP_VERSION_TEXT' => '0.0.0',
             'APP_TOKEN' => static::createAppToken(32),
             'APP_DEBUG' => true, 
-            'APP_URL' => 'http://localhost', 
-            
+            'APP_URL' => 'localhost', 
+            //ENCRYPTION
             'ENCRYPT_METHOD' => "AES256",
             'ENCRYPT_OPTION' => 0,
-            'ENCRYPT_IV' => "978852",
-            
+            'ENCRYPT_IV' => "978852",            
+            //CLIENT
+            'ID_CLIENT' => "default",
+            'FULLNAME_CLIENT' => 'Klug Sistemas',
+            'ADDRESS_1' => 'Rua Monte Sião, 551 ',
+            'ADDRESS_2' => 'Bairro Serra, Belo Horizonte - MG Cep 30240-050',
+            //STORAGE
+            'STORAGE_LIMIT' => "2GB",
+            'STORAGE_PATH' => "/storage/public/",
+            //DATABASE
             'DB_DRIVE' => 'mysql',
             'DB_HOST' => '127.0.0.1',
             'DB_PORT' => '3306',
             'DB_DATABASE' => 'iesod',
             'DB_USERNAME' => 'root',
             'DB_PASSWORD' => '',
-            
+            //EMAIL
             'MAIL_DRIVER' => 'smtp',
             'MAIL_HOST' => 'smtp.mailtrap.io',
             'MAIL_PORT' => '2525',
             'MAIL_USERNAME' => null,
             'MAIL_PASSWORD' => null,
-            'MAIL_ENCRYPTION' => null
+            'MAIL_ENCRYPTION' => null,
+            'BUILD' => 1
         ];
         
-        return static::saveFileEnv($filenameEnv, $data);
+        return static::saveFileEnv($filename, $data);
     }
-    static function saveFileEnv($filenameEnv = null, $data = []){
-        if(is_null($filenameEnv)){
-            if(!defined("ID_CLIENT"))
-            define('ID_CLIENT', 'public');
-            if(ID_CLIENT=='public'){
-                $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR.".env";
-            } else {
-                $filenameEnv = DIR_ROOT.DIRECTORY_SEPARATOR."/config_cli/".ID_CLIENT.".env";
-            }
-        }
+    static function addBuild(){
+        $filename = static::$envDefault;
+        $config = static::getFileEnv(  $filename );
+        $data = [
+            'BUILD' => $config['BUILD']??0
+        ];
+        $data['BUILD']++;
+
+        return static::updateEnvDefault($data);
+    }
+    static function updateEnvDefault($data = []){
+        $filename = static::$envDefault;
+        $data = array_merge(
+            static::getFileEnv(  $filename ),
+            $data
+        );
+        
+        return static::saveFileEnv($filename, $data);
+    }
+    static function saveFileEnv($filename, $data = []){
         $content = "";
 
-        $data['APP_NAME'] = $data['APP_NAME']?? "Iesod" ;
-        $data['APP_ENV'] = $data['APP_ENV']?? Translate::ENGLISH ;
-        $data['APP_TOKEN'] = $data['APP_TOKEN']?? (static::createAppToken(32)) ;
         $data['VERSION_ENV'] = isset($data['VERSION_ENV'])? $data['VERSION_ENV']+1 : 1;
         $data['TIMESTAMP_MOD'] = time();
         $data['DATE_MOD'] = date('Y-m-d H:i:s', $data['TIMESTAMP_MOD']);
@@ -141,12 +201,14 @@ class Config {
         
         foreach($data as $key=>$value){
             $key = strtoupper( $key );
-            $value = $value ?? ''; 
+            $value = $value ?? '';
             if(is_bool($value))
                 $value = $value?'true':'false';
+            if(is_null($value))
+                $value = "";
             $content .= "{$key}={$value}\n";
         }
         
-        return (file_put_contents($filenameEnv, $content)!==false);
+        return (file_put_contents($filename, $content)!==false);
     }
 }
