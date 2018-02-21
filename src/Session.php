@@ -7,11 +7,21 @@ class Session implements \Serializable {
     static $data;
     static $dataSerialized = "";
     public function __construct() {
-        if( !isset($_COOKIE["IESOD_SESSION"])
-            || empty($_COOKIE["IESOD_SESSION"]) ){
+		$idSession = null;
+		if(isset($_COOKIE["IESOD_SESSION"]) && !empty($_COOKIE["IESOD_SESSION"])){
+			$idSession = $_COOKIE["IESOD_SESSION"];
+		}
+		if(isset($_GET["IESOD_SESSION"]) && !empty($_GET["IESOD_SESSION"])){
+			$idSession = $_GET["IESOD_SESSION"];
+		}
+		if(isset($_POST["IESOD_SESSION"]) && !empty($_POST["IESOD_SESSION"])){
+			$idSession = $_POST["IESOD_SESSION"];
+		}
+		
+        if( is_null($idSession) ){
             $this->createId();
         } else { 
-            static::$id = $_COOKIE["IESOD_SESSION"];
+            static::$id = $idSession;
             $this->getData();
         }
     }
@@ -115,7 +125,7 @@ class Session implements \Serializable {
     public function unserialize($serialized) {
         static::$data = unserialize($serialized);
     }
-    public function getId(){
+    public static function getId(){
         return static::$id;
     }
     public function get($name = null,$default = null) {

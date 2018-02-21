@@ -193,7 +193,7 @@ class Router {
         } else {
             if(is_array($return)){
                 header("Content-type:text/json;charset=utf-8");
-                echo json_encode($return);
+                echo json_encode($return, JSON_PRETTY_PRINT);
                 exit;
             }
             

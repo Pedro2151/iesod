@@ -22,7 +22,8 @@ class Controller{
 	        'status' => $status,
 	        'strError' => $strError,
 	        'codeError' => $codeError,
-	        'data' => $data
+	        'data' => $data,
+			'IESOD_SESSION' => Session::getId()??'new'
 	    ];
 	    
 	    return $r;

@@ -127,7 +127,7 @@ class Validate
     static function domain($value,$param,$name){
         if(empty($value)) return true;
         if(!static::regexp($value,"^[\w._-]+\.[\w_-]+$", $name,true) )
-            throw new \Exception("'{$name}' invalid email");
+            throw new \Exception("'{$name}' invalid");
     }
     static function cpfcnpj($value, $param,$name){
         if(empty($value)) return true;
