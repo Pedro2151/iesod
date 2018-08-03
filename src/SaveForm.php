@@ -29,10 +29,36 @@ class SaveForm{
     public function getValidations(){
         return $this->valitations;
     }
-    
+    /**
+     * Altera um valor do Data
+     * 
+     * @param string $name Nome no data
+     * @param string $value Valor
+     * 
+     * @return SaveForm
+     */
     public function set($name, $value){
         $this->data[$name] = $value;
         
+        return $this;
+    }
+    /**
+     * Altera os valores do Data
+     * 
+     * @param array $data
+     * @param string $msgError Se nao for array executa except
+     * 
+     * @return SaveForm
+     */
+    public function setData($data, $msgError = null) {
+        if ( !is_array($data) ) {
+            if (is_null($msgError)) {
+                $msgError = "Data invalid!";
+            }
+            throw new \Exception($msgError);
+            return $this;
+        }
+        $this->data = $data;
         return $this;
     }
     public function implode($name,$glue){
@@ -69,22 +95,47 @@ class SaveForm{
 
         return $this;
     }
-    public function addInput($name, $validate,$fieldname = null,$default = null,$method = null){
-        $method = strtoupper( $method?? 'POST' );
+    /**
+     * Adiciona campo para gravar no DB e pega valor da requisicao HTTP
+     * 
+     * @param string $name Nome do parametro no DATA e na requisicao
+     * @param string $validade Termos da validacao
+     * @param string $fieldname Nome do campo no DB
+     * @param string $default Valor padrao do parametro(caso nao tenha)
+     * @param string $method Tipo da requisicao (GET ou POST)
+     * 
+     * @return SaveForm
+     */
+    public function addInput($name, $validate, $fieldname = null, $default = null, $method = null){
+        $method = strtoupper( $method ?? 'POST' );
         
         if($method=='GET'){
-            $value = $this->Request->get($name,$default,true);
+            $value = $this->Request->get($name, $default,true);
         } else {
-            $value = $this->Request->post($name,$default,true);
+            $value = $this->Request->post($name, $default, true);
         }
         
-        $this->set($name,$value);
-        $this->setValidate($name,$validate);
-        $this->setFieldname($fieldname,$name);
-        
+        $this->set($name, $value); // Grava o valor a DATA
+        return $this->addField ($name, $validade, $fieldname, $value);
+    }
+    /**
+     * Adiciona campo para gravar no DB
+     * 
+     * @param string $name Nome do parametro no DATA
+     * @param string $validade Termos da validacao
+     * @param string $fieldname Nome do campo no DB
+     * @param string $default Valor padrao do parametro(caso nao tenha)
+     * 
+     * @return SaveForm
+     */
+    public function addField ($name, $validade = null, $fieldname = null, $default = null) {
+        if (!isset($this->data[$name])) {
+            $this->set($name, $default); // Grava o valor a DATA
+        }
+        $this->setValidate($name, $validate); //  Grava dados para validacao
+        $this->setFieldname($fieldname, $name); // Grava Co-relacao com banco de dados
         return $this;
     }
-    
     public function preg_replace($name, $pattern, $replacement){
         $this->set(
             $name,
