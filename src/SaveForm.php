@@ -76,6 +76,14 @@ class SaveForm{
         }
         return $this;
     }
+    /**
+     * Colocar/Retirar correlação com data <-> fields
+     * 
+     * @param string $fieldname Nome do campo no DB
+     * @param string $name SE NULL retira correlacao.Nome do parametro no DATA e na requisicao
+     * 
+     * @return SaveForm
+     */
     public function setFieldname($fieldname,$name = null){
         if(is_null($name) || empty($name)){
             if(isset($this->fields[ $fieldname ]))
@@ -86,6 +94,15 @@ class SaveForm{
         
         return $this;
     }
+    /**
+     * Colocar valor em campo
+     * 
+     * @param string $fieldname Nome do campo no DB
+     * @param string $value Valor do parametro
+     * @param string $name Nome do parametro no DATA e na requisicao
+     * 
+     * @return SaveForm
+     */
     public function setFieldValue($fieldname, $value, $name = null){
         if(is_null($name))
             $name = $fieldname;
@@ -195,12 +212,24 @@ class SaveForm{
         );
         return $this;
     }
+    /** Checa validade dos dados em DATA
+     * 
+     * @return SaveForm */
     public function validate(){
         validate($this->data, $this->valitations);
         return $this;
     }
-    public function save($id = null){
-        if(is_null($id)){
+    /** Salva dados no Database
+     * 
+     * @param int $id SE NULL inserir dado em tabela,se Int Alterar dadi em tabela
+     * @param boolean $checkValid Checar validade do dados antes?DEFAULT=FALSE
+     * 
+     * @return int|boolean|\PDOStatement FALSE se erro. OU id do insert(Int). OU PDOStatement do update. */
+    public function save($id = null, $checkValid = false){
+        if ($checkValid) {
+            $this->validate();
+        }
+        if (is_null($id)) {
             return $this->Model->insert( $this->getFieldsValues() );
         } else {
             return $this->Model->update( $this->getFieldsValues() ,$id);
