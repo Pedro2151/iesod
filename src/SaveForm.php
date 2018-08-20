@@ -172,8 +172,18 @@ class SaveForm{
         $this->preg_replace($name, '/[^0-9+]/', '');
         return $this;
     }
+    /**
+    * Retira pontos e outros caracteres, somente deixando numeros
+    * 
+    * @param string $name Nome do parametro no DATA e na requisicao
+    * @param string|number $value Numero de entrada
+    * @param boolean $float DEFAULT=true; Se retorna Float ou Int
+    * @param int $dec DEFAULT=2; Se $float==true: Precisao de casas decimais
+    * @param boolean $unsigned DEFAULT=false; Sem sinal de negativo
+    *
+    * @return SaveForm
+    */
     public function onlyNumbers($name,$float = false,$dec = null,$unsigned = true){
-        
         $this->replace($name, ',', '.');
         if($float){
             $this->preg_replace($name, '/[^0-9.-]/', '');
@@ -189,7 +199,28 @@ class SaveForm{
         
         if($unsigned)
             $this->preg_replace($name, '/[^0-9.]/', '');
-
+        return $this;
+    }
+    /**
+    * Formata numero
+    *
+    * @param string $name Nome do parametro no DATA e na requisicao
+    * @param int $dec DEFAULT=2; Se $float==true: Precisao de casas decimais
+    * @param boolean $unsigned DEFAULT=false; Sem sinal de negativo
+    *
+    * @return SaveForm
+    */
+    public function numberFormat ($name,$dec = null,$unsigned = true) {
+        if (is_null($dec) || !is_int($dec)) {
+          $float = false;
+        } else {
+          $float = false;
+        }
+        $dec = abs($dec);
+        
+        $value = $this->get($name);
+        $this->set($name, formatNum($value, $float, $dec, $unsigned));
+        
         return $this;
     }
     public function unmaskMoney($name, $dec = 2){

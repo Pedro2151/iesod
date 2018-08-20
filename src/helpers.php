@@ -175,3 +175,39 @@ function csrfCreate($length = 32){
     cookieName: 'CSRF-TOKEN',
     headerName: 'X-CSRF-TOKEN',*/
 }
+/**
+* Converte string em numero(inteiro ou float)
+* 
+* @param string|number $value Numero de entrada
+* @param boolean $float DEFAULT=true; Se retorna Float ou Int
+* @param int $dec DEFAULT=2; Se $float==true: Precisao de casas decimais
+* @param boolean $unsigned DEFAULT=false; Sem sinal de negativo
+*
+* @return int|float
+*/
+function formatNum($value, $float = true,$dec = 2,$unsigned = false)
+{
+  $value = str_replace(",",".",$value);
+  if($unsigned){
+    $value = preg_replace('/[^0-9.]/', '',$value);
+  } else {
+    $value = preg_replace('/[^0-9.-]/', '',$value);
+  }
+
+  preg_match("/^(([-]{0,1}[0-9]+)([.]([0-9]+))?)/", $value, $matches);
+
+  if($float){
+    if(is_null($dec) || !is_int($dec)){
+      $value = $matches[1];// -1111.222222
+    } else {
+      $value = $matches[2];// -1111
+      if(!is_null($matches[4]))// 222222
+        $value .= ".".substr($matches[4],0,$dec);
+    }
+    $value = floatval($value);
+  } else {
+    $value = intval($matches[2]);// -1111
+  }
+
+  return $value;
+}
