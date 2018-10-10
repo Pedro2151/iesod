@@ -12,7 +12,7 @@ class Command
     static::$argc = $argc;
     static::$dir = getcwd()."/";
   }
-  function cmd($command, $action){
+  function cmd($command, $action, $namespace = null) {
     $args = $this->checkCommand($command);
     if($args===false){
       return false;
@@ -20,7 +20,10 @@ class Command
 
     list($classname,$method) = explode("@", $action);
 
-    $class = "/Iesod/Command/".$classname;
+    if (is_null($namespace)) {
+      $namespace = "/Iesod/Command/";
+    }
+    $class = $namespace.$classname;
     $class = str_replace("/","\\",$class);
     
     $return = call_user_func_array( array(new $class, $method), $args );

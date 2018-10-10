@@ -18,7 +18,7 @@ class ConfigModel extends Model  {
             $value = $result['value'];
             switch($result['type']){
                 case 2://JSON
-                    $value = json_decode( $value );
+                    $value = json_decode( $value, true);
                     break;
                 case 3://Boolean
                     $value = (strtoupper($value)=="TRUE" || $value==1);

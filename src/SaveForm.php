@@ -211,11 +211,7 @@ class SaveForm{
     * @return SaveForm
     */
     public function numberFormat ($name,$dec = null,$unsigned = true) {
-        if (is_null($dec) || !is_int($dec)) {
-          $float = false;
-        } else {
-          $float = false;
-        }
+        $float = !(is_null($dec) || !is_int($dec));
         $dec = abs($dec);
         
         $value = $this->get($name);
@@ -254,16 +250,72 @@ class SaveForm{
      * 
      * @param int $id SE NULL inserir dado em tabela,se Int Alterar dadi em tabela
      * @param boolean $checkValid Checar validade do dados antes?DEFAULT=FALSE
+     * @param callback $callbackOnSave($id, $dataNew[, $dataOld = null]) Execultado apos salvar o registro.
+     * @param callback $callbackOnError($id, $errorDescription, $dataNew[, $dataOld = null]) Execultado ao acontecer erro ao salvar o registro.
      * 
      * @return int|boolean|\PDOStatement FALSE se erro. OU id do insert(Int). OU PDOStatement do update. */
-    public function save($id = null, $checkValid = false){
+    public function save ($id = null, $checkValid = false, $callbackOnSave = null, $callbackOnError = null){
         if ($checkValid) {
             $this->validate();
         }
+        $dataNew = $this->getFieldsValues();
+        $dataOld = null;
+        $return = false;
         if (is_null($id)) {
-            return $this->Model->insert( $this->getFieldsValues() );
+            try {
+                $id = $this->Model->insert( $this->getFieldsValues() );
+                if (!$id) {
+                    throw new \Exception("Error undefined");
+                    return $id;
+                }
+                $return = $id;
+            } catch (\Exception $e) {
+                if (!is_null($callbackOnError)) {
+                    $callbackOnError(
+                        $id,
+                        $e->getCode().": ".$e->getMessage(),
+                        $dataNew,
+                        null
+                    );
+                }
+                throw $e;
+                return false;
+            }
         } else {
-            return $this->Model->update( $this->getFieldsValues() ,$id);
+             try {
+                $dataOld = $this->Model->select()->find($id);
+                if (!$dataOld) {
+                    $dataOld = null;
+                }
+            } catch (\Exception $e) {
+                $dataOld = null;
+            }
+            try {
+                $return = $this->Model->update( $this->getFieldsValues() ,$id);
+                if (!$return) {
+                    throw new \Exception("Error undefined");
+                    return $return;
+                }
+            } catch (\Exception $e) {
+                if (!is_null($callbackOnError)) {
+                    $callbackOnError(
+                        $id,
+                        $e->getCode().": ".$e->getMessage(),
+                        $dataNew,
+                        $dataOld
+                    );
+                }
+                throw $e;
+                return false;
+            }
         }
+        if (!is_null($callbackOnSave)) {
+            $callbackOnSave(
+                $id,
+                $dataNew,
+                $dataOld
+            );
+        }
+        return $return;
     }
 }

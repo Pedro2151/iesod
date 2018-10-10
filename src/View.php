@@ -35,41 +35,44 @@ class View {
             $user = false;
         else
             $user = $Auth->toArray();
-        $files = [
-            $filename.".php",
-            $filename.".html"
-        ];
-        extract($data);
-        foreach ($files as $file) {
-            if (is_file($file)) {
-                require_once $file;
+
+        // Usa o DWOO?
+        if (env('DWOO', 0) == 1) {
+            if(is_file($filename.".tpl")){
+                $core = new \Dwoo\Core();
+                $core->addGlobal('lang', $lang);
+                $core->addGlobal('user', $user);
+                echo $core->get($filename.".tpl", $data);
                 exit;
+            } elseif(is_file($filename.".html")){
+                $core = new \Dwoo\Core();
+                $core->addGlobal('lang', $lang);
+                $core->addGlobal('user', $user);
+                echo $core->get($filename.".html", $data);
+                exit;
+            } elseif(is_file($filename.".php")){
+                extract($data);
+                require_once $filename.".php";
+                exit;
+            } else {
+                throw new \Exception("Arquivo não encontrado!FILE: {$filename}");
+                return false;
             }
-        }
-        throw new \Exception("Arquivo não encontrado!\n<br />FILE: {$filename}");
-        return false;
-        /*
-        if(is_file($filename.".tpl")){
-            $core = new \Dwoo\Core();
-            $core->addGlobal('lang', $lang);
-            $core->addGlobal('user', $user);
-            echo $core->get($filename.".tpl", $data);
-            exit;
-        } elseif(is_file($filename.".html")){
-            $core = new \Dwoo\Core();
-            $core->addGlobal('lang', $lang);
-            $core->addGlobal('user', $user);
-            echo $core->get($filename.".html", $data);
-            exit;
-        } elseif(is_file($filename.".php")){
-            extract($data);
-            require_once $filename.".php";
-            exit;
         } else {
-            throw new \Exception("Arquivo não encontrado!FILE: {$filename}");
+            $files = [
+                $filename.".php",
+                $filename.".html"
+            ];
+            extract($data);
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    require_once $file;
+                    exit;
+                }
+            }
+            throw new \Exception("Arquivo não encontrado!\n<br />FILE: {$filename}");
             return false;
         }
-        */
     }
 }
 
