@@ -165,7 +165,8 @@ class Router {
             }
         }
     }
-    public static function unknown($controller,$args = []){
+    public static function unknown ($controller,$args = []) {
+        header("X-Id-Client: " . env('ID_CLIENT', 'public'));
         if(is_null(static::$data)){
             list($uri) = explode("?", $_SERVER['REQUEST_URI']);
             static::$data = [
@@ -192,8 +193,15 @@ class Router {
             throw new \Exception("Erro inesperado");
         } else {
             if(is_array($return)){
+                if (env('APP_DEBUG', false)) {
+                    $debug = ob_get_contents();
+                    if (!empty($debug)) {
+                        $return['debug'] = $debug;
+                    }
+                }
+                ob_clean();
                 header("Content-type:text/json;charset=utf-8");
-                echo json_encode($return, JSON_PRETTY_PRINT);
+                echo json_encode($return);
                 exit;
             }
             
