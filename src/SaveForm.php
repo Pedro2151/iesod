@@ -133,19 +133,19 @@ class SaveForm{
         }
         
         $this->set($name, $value); // Grava o valor a DATA
-        return $this->addField ($name, $validade, $fieldname, $value);
+        return $this->addField ($name, $validate, $fieldname, $value);
     }
     /**
      * Adiciona campo para gravar no DB
      * 
      * @param string $name Nome do parametro no DATA
-     * @param string $validade Termos da validacao
+     * @param string $validate Termos da validacao
      * @param string $fieldname Nome do campo no DB
      * @param string $default Valor padrao do parametro(caso nao tenha)
      * 
      * @return SaveForm
      */
-    public function addField ($name, $validade = null, $fieldname = null, $default = null) {
+    public function addField ($name, $validate = null, $fieldname = null, $default = null) {
         if (!isset($this->data[$name])) {
             $this->set($name, $default); // Grava o valor a DATA
         }
@@ -282,7 +282,7 @@ class SaveForm{
                 return false;
             }
         } else {
-             try {
+            try {
                 $dataOld = $this->Model->select()->find($id);
                 if (!$dataOld) {
                     $dataOld = null;
