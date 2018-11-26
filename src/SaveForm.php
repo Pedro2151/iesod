@@ -146,7 +146,7 @@ class SaveForm{
      * @return SaveForm
      */
     public function addField ($name, $validate = null, $fieldname = null, $default = null) {
-        if (!isset($this->data[$name])) {
+        if (!isset($this->data[$name]) || empty($this->data[$name])) {
             $this->set($name, $default); // Grava o valor a DATA
         }
         $this->setValidate($name, $validate); //  Grava dados para validacao
