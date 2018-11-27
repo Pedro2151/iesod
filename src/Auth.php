@@ -8,6 +8,10 @@ class Auth {
     const USERGROUP_ADMIN = 1;
     
     static $AuthData;
+    /**
+     * @var null|boolean NULL - Caso nao verificado / TRUE - Se autenticado / FALSE - Se nao
+     */
+    static $Authenticate;
     private $User;
     
     public function __construct(UserInterface $User){
@@ -28,33 +32,46 @@ class Auth {
             && isset(static::$AuthData['id_session'])
             && static::$AuthData['id_session']==$sessionId
         ){
+            static::$Authenticate = true;
             return ( new AuthUser( static::$AuthData ) );
         }
         
+        if (static::$Authenticate===false) {
+            return false;
+        }
         $Model = new class() extends Model {
             protected $table = 'auth';
             protected $primaryKey = 'id_session';
         };
         
         try {
-            $Model->update(
-                ['last_access' => date('Y-m-d H:i:s',time())],
-                $sessionId
-            );
+            $timeNow = time();
+            $timeLimit = $timeNow - (3600 * 3); // 3 Horas
+            // Inativar conexoes antigas
+            $Model->where('active','=',1)
+                ->where('last_access', '<=', date('Y-m-d H:i:s',$timeLimit))
+                ->update(['active' => 0]);
+            // Atualizar conexao atual
+            $Model->where('active','=',1)
+                ->update(
+                    ['last_access' => date('Y-m-d H:i:s', $timeNow)],
+                    $sessionId
+                );
         } catch (\Exception $e) {
         }
         
         try {
-            $result = $Model
-                ->where('active','=',1)
+            $result = $Model->where('active','=',1)
                 ->find( $sessionId );
             
             if($result===false)
                 return false;
             
             static::$AuthData = $result;
+            static::$Authenticate = true;
             return ( new AuthUser( $result ) );
         } catch (\Exception $e) {
+            static::$Authenticate = false;
             return false;
         }
     }

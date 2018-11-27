@@ -9,19 +9,21 @@ class Model implements ModelInterface {
     protected $primaryKey;
     protected $connectionId;
     private $id;
-    private $fields = [];
+    static $fields;
     private $exceptions = [];
-    
     public function __construct($id = null){
         $this->id = $id;
-        $this->fields = $this->getFieldsFromTable();
-        if(!is_null($this->primaryKey))
-            $this->fields[ $this->primaryKey ]->inRequest( false );
     }
     public function getTable(){
         return $this->table;
     }
-    public function getPrimaryKey(){
+    public function getPrimaryKey($setField = true){
+        if(!is_null($this->primaryKey) && $setField) {
+            $this->getFields();
+            if (isset(static::$fields[ $this->primaryKey ])) {
+                static::$fields[ $this->primaryKey ]->inRequest( false );
+            }
+        }
         return $this->primaryKey;
     }
     public function getId(){
@@ -51,7 +53,10 @@ class Model implements ModelInterface {
      * @return array|boolean|\Iesod\Database\Field[]
      */
     public function getFields(){
-        return $this->fields;
+        if (is_null(static::$fields)) {
+            static::$fields = $this->getFieldsFromTable();
+        }
+        return static::$fields;
     }
     static function beginTransaction(){
         $m = new static();
@@ -84,21 +89,22 @@ class Model implements ModelInterface {
      * @return boolean|\Iesod\Database\Field
      */
     public function getField($fieldName){
-        return $this->fields[$fieldName]?? false ;
+        $fields = $this->getFields();
+        return $fields[$fieldName]?? false ;
     }
     public function setField($fieldName,$params = []){
-        if(isset($this->fields[$fieldName])){
+        $fields = $this->getFields();
+        if(isset($fields[$fieldName])){
             if(isset($params['default']))
-                $this->fields[$fieldName]->setDefault($params['default']);
+                static::$fields[$fieldName]->setDefault($params['default']);
             if(isset($params['label']))
-                $this->fields[$fieldName]->setLabel($params['label']);
+                static::$fields[$fieldName]->setLabel($params['label']);
             if(isset($params['type']))
-                $this->fields[$fieldName]->setType($params['type']);
+                static::$fields[$fieldName]->setType($params['type']);
             if(isset($params['pattern']))
-                $this->fields[$fieldName]->setPattern($params['pattern']);
+                static::$fields[$fieldName]->setPattern($params['pattern']);
             if(isset($params['required']))
-                $this->fields[$fieldName]->setRequired($params['required']);
-                                
+                static::$fields[$fieldName]->setRequired($params['required']);
             return $this;
         } else {
             return false;
@@ -180,7 +186,7 @@ class Model implements ModelInterface {
         };
         $r->connectionId = $m->getConnectionId();
         $r->from[] = $m->getTable();
-        $r->primaryKey = $m->getPrimaryKey();
+        $r->primaryKey = $m->getPrimaryKey(false);
         $r->id = $m->getId();
         if(!is_null($r->id))
             $r->where($r->primaryKey, '=', $r->id);

@@ -7,7 +7,7 @@ class Query {
      */
     static $connections = [];
     static $cfgConnections = [];
-    
+    static $tables = [];
     /**
      * 
      * @param string $dbname Nome do banco de dados
@@ -117,26 +117,54 @@ class Query {
      */
     static public function query($sql,$bindData = null,$connectionsId = null){
         $pdo = static::connect($connectionsId);
-        
+        $debug = false;
+        $fileDebug = "/home/jonas/Public/debug.sql";
+        // DEBUG
+        if ($debug) {
+            $f = fopen($fileDebug, 'a');
+            fwrite($f, "\n# SQL\n");
+            fwrite($f, $sql . "\n");
+        }
+        // END DEBUG */
+        $timeStart = microtime(true);
         if(is_null($bindData) || empty($bindData)){
             if(!$query = $pdo->query($sql)){
 				list($handle, $codError, $StrError) = $pdo->errorInfo();
-				
+				if ($debug) {
+                    $timeEnd = microtime(true);
+                    fwrite($f, "# ERROR: {$codError} - {$StrError}\n");
+                    fwrite($f, "# timeExec: " . ($timeEnd - $timeStart) . "\n");
+                    fclose($f);
+                }
 				throw new \Exception("Error: #{$codError}: {$StrError}<br />\r\n".$sql,$codError);
                 return false;
+            } elseif ($debug) {
+                $timeEnd = microtime(true);
+                fwrite($f, "# timeExec: " . ($timeEnd - $timeStart) . "\n");
+                fclose($f);
             }
         } else {
             $query = $pdo->prepare($sql);
-            $data = '';
-			foreach ($bindData as $parameter=>$value){
-				$data .= "{$parameter} = '{$value}'\r\n";
+            if ($debug) {
+                foreach ($bindData as $parameter=>$value){
+                    fwrite($f, "# {$parameter} = '{$value}'\n");
+                }
             }
             
             if(!$query->execute( $bindData )){
                 list($handle, $codError, $StrError) = $query->errorInfo();
-				
+				if ($debug) {
+                    $timeEnd = microtime(true);
+                    fwrite($f, "\n# ERROR: {$codError} - {$StrError}\n");
+                    fwrite($f, "# timeExec: " . ($timeEnd - $timeStart) . "\n");
+                    fclose($f);
+                }
                 throw new \Exception("Error: #{$codError}: {$StrError}<br />\r\n".$query->queryString,$codError);
                 return false;
+            } elseif ($debug) {
+                $timeEnd = microtime(true);
+                fwrite($f, "# timeExec: " . ($timeEnd - $timeStart) . "\n");
+                fclose($f);
             }
         }
 		
@@ -305,11 +333,18 @@ class Query {
         return $where;
     }
     static public function isTable($table,$connectionsId = null){
-        if($result = static::query("SHOW TABLES LIKE '{$table}'",null,$connectionsId)){
-            return ( $result->rowCount()>0 );
-        } else {
-            return false;
+        if (isset(static::$tables[$connectionsId])) {
+            if (in_array($table, static::$tables[$connectionsId])) {
+                return true;
+            }
         }
+        // OLD: SHOW TABLES LIKE '{$table}'
+        $result = static::query("SHOW TABLES",null,$connectionsId);
+        static::$tables[$connectionsId] = [];
+        while($row = $result->fetch()) {
+            static::$tables[$connectionsId][] = $row[0];
+        }
+        return in_array($table, static::$tables[$connectionsId]);
     }
     static public function getFieldsFromTable($table,$connectionsId = null){
         if(is_null($table) || !static::isTable($table,$connectionsId)){

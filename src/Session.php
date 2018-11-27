@@ -34,24 +34,22 @@ class Session implements \Serializable {
             protected $primaryKey = 'id';
         };
         
-        $result = $Model->select(['data'])
+        $result = $Model->select(['plataform', 'data'])
             ->id( $this->getId() )
-            ->get();
+            ->first();
         
-        if($result===false || $result->rowCount()==0){
+        if(!$result || $result['plataform'] != md5($_SERVER['HTTP_USER_AGENT'])) {
             static::$data = [];
             if($createIfNotExists)
                 $this->saveData();
-            
         } else {
-            list($data) = $result->fetch();
-            static::$dataSerialized = $data;
-            $this->unserialize( $data );
+            static::$dataSerialized = $result['data'];
+            $this->unserialize( $result['data'] );
         }
         
         return static::$data;
     }
-    private function saveData(){
+    private function saveData () {
         $id = $this->getId();
         if(is_null($id))
             return false;
@@ -61,18 +59,16 @@ class Session implements \Serializable {
             protected $primaryKey = 'id';
         };
         
-        $result = $Model->select([ Model::Raw('count(id)') ])
-            ->id( $id )
-            ->get();
+        $result = $Model->select('id')->id( $id )->first();
 			
-        list($count) = $result->fetch();
-		
-        if($count==0){
-            $browser =  get_browser($_SERVER['HTTP_USER_AGENT'],true);
+        if(!$result){
+            // $browser =  get_browser($_SERVER['HTTP_USER_AGENT'],true);
             $result = $Model->insert([
                 'id' => $id,
-                'browser' => $browser['browser_name_pattern'],
-                'plataform' => $browser['platform'],
+                /* 'browser' => $browser['browser_name_pattern'],
+                'plataform' => $browser['platform'], */
+                'browser' => substr($_SERVER['HTTP_USER_AGENT'], 0, 254),
+                'plataform' => md5($_SERVER['HTTP_USER_AGENT']),
                 'data' => $this->serialize()
             ], false);
         } else {
@@ -117,7 +113,9 @@ class Session implements \Serializable {
         static::$dataSerialized = "";
     }
     public function serialize() {
-        return serialize(static::$data);
+        $data = static::$data;
+        $data['IP_CLIENT'] = $_SERVER['REMOTE_ADDR'];
+        return serialize($data);
     }
     /**
      * @param $serialized

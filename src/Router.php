@@ -166,7 +166,9 @@ class Router {
         }
     }
     public static function unknown ($controller,$args = []) {
+        $timeExec = microtime(true) - IESOD_START;
         header("X-Id-Client: " . env('ID_CLIENT', 'public'));
+        header("X-Time-Exec: " . $timeExec);
         if(is_null(static::$data)){
             list($uri) = explode("?", $_SERVER['REQUEST_URI']);
             static::$data = [
