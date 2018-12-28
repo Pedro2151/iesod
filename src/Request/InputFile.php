@@ -81,6 +81,13 @@ class InputFile {
             return $this->file['size'];
         }
     }
+    public function name($index = null){
+        if($this->multiFiles){
+            return is_null($index)? $this->file['name'] : $this->file['name'][$index];
+        } else {
+            return $this->file['name'];
+        }
+    }
     public function move($filename, $index = null){
         if(!is_dir($this->pathUpload))
             throw new \Exception("Path upload not found" ,0);
