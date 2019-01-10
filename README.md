@@ -34,4 +34,4 @@ Como usar
  O diretório *[src](src)* contém os códigos fontes desta biblioteca.
  
 ## Dúvidas
-jonas@jonassilva.com.br - Jonas R. Silva
+jonasribeiro19@gmail.com - Jonas R. Silva
