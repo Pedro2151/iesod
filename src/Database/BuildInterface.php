@@ -1,7 +1,6 @@
 <?php namespace Iesod\Database;
 
 interface BuildInterface {
-    /*
     public $primaryKey;
     public $id;
     public $connectionId;
@@ -11,7 +10,7 @@ interface BuildInterface {
     public $where = [];
     public $order = [];
     public $start;
-    public $limit; */
+    public $limit;
     
     public function select($columns = ['*']);
     public function joinLeft($table, $first, $operator , $secund);

@@ -62,13 +62,13 @@ class Session implements \Serializable {
         $result = $Model->select('id')->id( $id )->first();
 			
         if(!$result){
-            // $browser =  get_browser($_SERVER['HTTP_USER_AGENT'],true);
+            $browser =  get_browser($_SERVER['HTTP_USER_AGENT'],true);
             $result = $Model->insert([
                 'id' => $id,
-                /* 'browser' => $browser['browser_name_pattern'],
-                'plataform' => $browser['platform'], */
-                'browser' => substr($_SERVER['HTTP_USER_AGENT'], 0, 254),
-                'plataform' => md5($_SERVER['HTTP_USER_AGENT']),
+                'browser' => substr($browser['browser_name_pattern'], 254),
+                'plataform' => $browser['platform'],
+                /* 'browser' => substr($_SERVER['HTTP_USER_AGENT'], 0, 254),
+                'plataform' => md5($_SERVER['HTTP_USER_AGENT']), */
                 'data' => $this->serialize()
             ], false);
         } else {
