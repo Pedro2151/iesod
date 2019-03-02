@@ -131,6 +131,9 @@ class SaveForm{
         } else {
             $value = $this->Request->post($name, $default, true);
         }
+        if (is_null($value) || $value === '') {
+            $value = $default;
+        }
         
         $this->set($name, $value); // Grava o valor a DATA
         return $this->addField ($name, $validate, $fieldname, $value);
