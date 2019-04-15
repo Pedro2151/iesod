@@ -160,7 +160,7 @@ class Router {
                 $AccessPolicy->beforeSuccess();
                 static::unknown($controller,$params);
             } catch (\Exception $e) {
-                $AccessPolicy->afterFail( $e->getCode(),$e->getMessage() );
+                //$AccessPolicy->afterFail( $e->getCode(),$e->getMessage() );
                 throw $e;
             }
         }

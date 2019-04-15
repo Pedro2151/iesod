@@ -27,18 +27,18 @@ class Validate
             
             if (is_callable([$this, $testName])) {
                 if (call_user_func([$this,$testName],$value,$testValue,$name)===false) {
-                    throw new \Exception("Invalid input '{$name}'");
+                    throw new \Exception("Valor inválido para o campo '{$name}'");
                     return false;
                 }
             } else {
-                throw new \Exception("Invalid validate method '{$testName}'");
+                throw new \Exception("Metodo inválido, '{$testName}'");
             }
         }
         return true;
     }
     static function require($value,$param,$name) {
         if (is_null($value) || empty($value)) {
-            $e = new ValidateException("'{$name}' is required");
+            $e = new ValidateException("'{$name}' é obrigatório");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -46,7 +46,7 @@ class Validate
     static function int($value,$param,$name) {
         if (empty($value)) return true;
         if ( !static::regexp($value,"^[-]?[0-9]+$",$name,true) ) {
-            $e = new ValidateException("'{$name}' invalid integer");
+            $e = new ValidateException("Valor inválido para o campo '{$name}', somente numero");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -54,7 +54,7 @@ class Validate
     static function intunsigned($value,$param,$name) {
         if (empty($value)) return true;
         if ( !static::regexp($value,"^[0-9]+$", $name,true) ) {
-            $e = new ValidateException("'{$name}' invalid integer");
+            $e = new ValidateException("Valor inválido para o campo '{$name}'");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -64,7 +64,7 @@ class Validate
         $value = floatval($value);
         
         if ($value < $param) {
-            $e = new ValidateException("'{$name}' min={$param}");
+            $e = new ValidateException("Valor inválido para o campo '{$name}', min={$param}");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -74,7 +74,7 @@ class Validate
         $value = floatval($value);
         
         if ($value > $param) {
-            $e = new ValidateException("'{$name}' max={$param}");
+            $e = new ValidateException("Valor inválido para o campo '{$name}', max={$param}");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -84,7 +84,7 @@ class Validate
         $value = (string)$value;
         
         if (strlen($value) < $param) {
-            $e = new ValidateException("'{$name}' length min={$param}");
+            $e = new ValidateException("Valor inválido para o campo '{$name}', length min={$param}");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -94,7 +94,7 @@ class Validate
         $value = (string)$value;
         
         if (strlen($value) != $param) {
-            $e = new ValidateException("'{$name}' length={$param}");
+            $e = new ValidateException("Valor inválido para o campo '{$name}', length={$param}");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -104,7 +104,7 @@ class Validate
         $value = (string)$value;
         
         if (strlen($value) > $param) {
-            $e = new ValidateException("'{$name}' length max={$param}");
+            $e = new ValidateException("Valor inválido para o campo '{$name}', length max={$param}");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -112,7 +112,7 @@ class Validate
     static function username($value,$param,$name) {
         if (empty($value)) return true;
         if (!static::regexp($value,"^[\w._-]+$", $name,true) || static::minlen($value, 3,$name)) {
-            $e = new ValidateException("'{$name}' invalid value");
+            $e = new ValidateException("Valor inválido para o campo '{$name}'");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -121,7 +121,7 @@ class Validate
         if (empty($value)) return true;
         $test = "^(00|19|20)[0-9]{2}-([0][0-9]|[1][0-2])-([0-2][0-9]|[3][0-1])([ ][0-9:]{5,8})?$";
         if (!static::regexp($value, $test, $name, true)) {
-            $e = new ValidateException("'{$name}' invalid date value");
+            $e = new ValidateException("Valor inválido para o campo '{$name}'");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -131,7 +131,7 @@ class Validate
         $test = "^(00|19|20)[0-9]{2}-([0][0-9]|[1][0-2])-([0-2][0-9]|[3][0-1])".
             "([0-1][0-9]|[2][0-3])[:][0-5][0-9]([:][0-5][0-9])?$";
         if (!static::regexp($value, $test, $name, true)) {
-            $e = new ValidateException("'{$name}' invalid dateTime value");
+            $e = new ValidateException("Valor inválido para o campo '{$name}'");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -144,7 +144,7 @@ class Validate
     static function number($value,$param,$name) {
         if (empty($value)) return true;
         if (!static::regexp($value,"^([-]?[0-9]*\.)?[0-9]*$", $name,true) ) {
-            $e = new ValidateException("'{$name}' invalid number");
+            $e = new ValidateException("Valor inválido para o campo '{$name}'");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -152,7 +152,7 @@ class Validate
     static function email($value,$param,$name) {
         if (empty($value)) return true;
         if (!static::regexp($value,"^[\w._-]+@[\w._-]+\.[\w_-]+$", $name,true) ) {
-            $e = new ValidateException("'{$name}' invalid email");
+            $e = new ValidateException("Valor inválido para o campo '{$name}'");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -160,7 +160,7 @@ class Validate
     static function domain($value,$param,$name) {
         if (empty($value)) return true;
         if (!static::regexp($value,"^[\w._-]+\.[\w_-]+$", $name,true) ) {
-            $e = new ValidateException("'{$name}' invalid value");
+            $e = new ValidateException("Valor inválido para o campo '{$name}'");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -174,7 +174,7 @@ class Validate
         } elseif (strlen($value)==14) {
             static::cnpj($value,$param,$name);
         } else {
-            $e = new ValidateException("'{$name}' invalid CPF or CNPJ");
+            $e = new ValidateException("'{$name}' valor inválido CPF or CNPJ");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -196,7 +196,7 @@ class Validate
             '88888888888',
             '99999999999'
         ])) {
-            $e = new ValidateException("'{$name}' invalid CPF");
+            $e = new ValidateException("'{$name}' CPF inválido");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -232,7 +232,7 @@ class Validate
         }
 
         if ( ($value[9] != $a[9]) || ($value[10]!=$a[10]) ) {
-            $e = new ValidateException("'{$name}' invalid CPF");
+            $e = new ValidateException("'{$name}' CPF inválido");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -255,7 +255,7 @@ class Validate
             '88888888888888',
             '99999999999999'
         ])) {
-            $e = new ValidateException("'{$name}' invalid CNPJ");
+            $e = new ValidateException("'{$name}' CNPJ Inválido");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -282,7 +282,7 @@ class Validate
             $d[1] = 0;
         
         if ($value[12]!=$d[0] || $value[13]!=$d[1]) {
-            $e = new ValidateException("'{$name}' invalid CNPJ");
+            $e = new ValidateException("'{$name}' CNPJ inválido");
             $e->setAll(__METHOD__, $value, $param, $name);
             throw $e;
         }
@@ -292,7 +292,7 @@ class Validate
         if (preg_match("/".$pattern."/", $value)==false) {
             if ($silence)
                 return false;
-            $e = new ValidateException("'{$name}' invalid value");
+            $e = new ValidateException("Valor inválido para o campo '{$name}'");
             $e->setAll(__METHOD__, $value, $pattern, $name);
             throw $e;
         }
