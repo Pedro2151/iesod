@@ -38,19 +38,19 @@ class View {
 
         // Usa o DWOO?
         if (env('DWOO', 0) == 1) {
-            if(is_file($filename.".tpl")){
+            if(is_file($filename.".tpl")) {
                 $core = new \Dwoo\Core();
                 $core->addGlobal('lang', $lang);
                 $core->addGlobal('user', $user);
                 echo $core->get($filename.".tpl", $data);
                 exit;
-            } elseif(is_file($filename.".html")){
+            } elseif(is_file($filename.".html")) {
                 $core = new \Dwoo\Core();
                 $core->addGlobal('lang', $lang);
                 $core->addGlobal('user', $user);
                 echo $core->get($filename.".html", $data);
                 exit;
-            } elseif(is_file($filename.".php")){
+            } elseif(is_file($filename.".php")) {
                 extract($data);
                 require_once $filename.".php";
                 exit;

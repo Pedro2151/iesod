@@ -346,7 +346,7 @@ class Query {
         }
         return in_array($table, static::$tables[$connectionsId]);
     }
-    static public function getFieldsFromTable($table,$connectionsId = null){
+    static public function getFieldsFromTable($table,$connectionsId = null, $arrayNames = false){
         if(is_null($table) || !static::isTable($table,$connectionsId)){
             throw new \Exception("Table '{$table}' not exists");
             return false;
@@ -358,7 +358,11 @@ class Query {
         
         for($i=0;$i<$c;$i++){
             $f = $result->getColumnMeta($i);
-            $fields[ $f['name'] ] = new Field( $f );
+            if ($arrayNames) {
+                $fields = $f['name'];
+            } else {
+                $fields[ $f['name'] ] = new Field( $f );
+            }
         }
         
         return $fields;

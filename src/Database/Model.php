@@ -44,17 +44,17 @@ class Model implements ModelInterface {
      * 
      * @return boolean|\Iesod\Database\Field[]
      */
-    public function getFieldsFromTable(){
+    public function getFieldsFromTable($arrayNames = false){
         $table = $this->getTable();
-        return Query::getFieldsFromTable($table,$this->getConnectionId() );
+        return Query::getFieldsFromTable($table,$this->getConnectionId(), $arrayNames );
     }
     /**
      * 
      * @return array|boolean|\Iesod\Database\Field[]
      */
-    public function getFields(){
+    public function getFields($arrayNames = false){
         if (is_null(static::$fields)) {
-            static::$fields = $this->getFieldsFromTable();
+            static::$fields = $this->getFieldsFromTable($arrayNames);
         }
         return static::$fields;
     }
