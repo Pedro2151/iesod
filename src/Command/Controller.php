@@ -61,9 +61,12 @@ class Controller
     } else {
       $use = "use {$model};\n";
       $model = explode("\\",$model);
-      $construct = "  public function __construct(){\n".
-        "    \$this->Model = new ".array_pop($model)."();\n". 
-        "  }\n";
+      $construct = "    public function __construct(){\n".
+        "        \$this->Model = new ".array_pop($model)."();\n". 
+        "        // \$this->saveLog = false; // Salvar log ao alterar\n".
+        "        // \$this->cols = []; // Colunas para a listagem\n".
+        "        // \$this->params = []; // Parametros da listagem\n".
+        "    }\n";
     }
 
     $controller = Command::nameTransform($controller);
@@ -81,15 +84,7 @@ class Controller
       "\n".
       "class {$controller} extends ResourceController\n".
       "{\n".
-      $construct.
-      "  public function index(){ /* ... */ }\n".
-      "  public function create(){ /* ... */ }\n".
-      "  public function store(){ /* ... */ }\n".
-      "  public function show(\$id){ /* ... */ }\n".
-      "  public function edit(\$id){ /* ... */ }\n".
-      "  public function update(\$id){ /* ... */ }\n".
-      "  public function destroy(\$id){ /* ... */ }\n".
-      "\n".
+      $construct."\n".
       "}";
       
       file_put_contents($filename,$data);
