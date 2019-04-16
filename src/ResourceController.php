@@ -139,7 +139,7 @@ class ResourceController extends Controller {
         ];
         return $types[$type] ?? null;
     }
-    public function store ($idQuadro) { return $this->update($idQuadro); }
+    public function store () { return $this->update(); }
     public function update ($id) {
         try {
             $isNew = is_null($id) || $id <= 0;
