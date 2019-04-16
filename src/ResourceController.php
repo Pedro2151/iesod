@@ -10,7 +10,7 @@ class ResourceController extends Controller {
     public $params;
     public function index () {
         try {
-            $primaryKey = $this->Model->primaryKey;
+            $primaryKey = $this->Model->getPrimaryKey();
             $request = $this->request();
             $params = [
                 'q' => $request->get('q', '', true),
@@ -40,7 +40,7 @@ class ResourceController extends Controller {
         return $Build;
     }
     public function getList ($params = [], $cols = null) {
-        $primaryKey = $this->Model->primaryKey;
+        $primaryKey = $this->Model->getPrimaryKey();
         if (is_null($this->params)) {
             $paramsDefault = [
                 'q' => '',
@@ -144,8 +144,8 @@ class ResourceController extends Controller {
         try {
             $isNew = is_null($id) || $id <= 0;
             if ($isNew) $id = null;
-            $table = $this->Model->table;
-            $primaryKey = $this->Model->primaryKey;
+            $table = $this->Model->getTable();
+            $primaryKey = $this->Model->getPrimaryKey();
             // Salvar ==============
             $SaveForm = new SaveForm($this->request(), $this->Model);
             // Receber os dados
@@ -196,7 +196,7 @@ class ResourceController extends Controller {
     public function destroy ($id) {
         try {
             $this->Model->where('id', '=', $id)->delete();
-            TableHist::addLog('DELETE', $id, $this->Model->table);
+            TableHist::addLog('DELETE', $id, $this->Model->getTable());
             return $this->returnAjax([]);
         } catch (\Exception $e) {
             return $this->returnAjaxError($e->getMessage(), $e->getCode());
