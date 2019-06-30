@@ -16,6 +16,9 @@ class Config
       }
       return $idClient;
     }
+    public function createEnvApp () {
+		  return ConfigI::createDefaultFile();
+	  }
     public function createEnvClient($idClient = null){
       $idClient = $this->checkClient($idClient);
       

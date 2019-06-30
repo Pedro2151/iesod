@@ -201,7 +201,7 @@ function formatNum($value, $float = true,$dec = 2,$unsigned = false)
       $value = $matches[1];// -1111.222222
     } else {
       $value = $matches[2];// -1111
-      if(!is_null($matches[4]))// 222222
+      if(isset($matches[4]) && !is_null($matches[4]))// 222222
         $value .= ".".substr($matches[4],0,$dec);
     }
     $value = floatval($value);
