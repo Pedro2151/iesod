@@ -27,7 +27,9 @@ class AuthUser {
     public function getPhone(){
         return $this->dataUser['phone'] ?? false;
     }
-    
+    public function getData ($name) {
+        return $this->dataUser[$name] ?? false;
+    }
     public function setName($value){
         $this->dataUser['name'] = $value;
     }
@@ -37,7 +39,6 @@ class AuthUser {
     public function setPhone($value){
         $this->dataUser['phone'] = $value;
     }
-    
     public function toArray(){
         return $this->dataUser;
     }

@@ -61,7 +61,8 @@ class Auth {
         }
         
         try {
-            $result = $Model->where('active','=',1)
+            $result = $Model->where('auth.active','=',1)
+                ->joinInner("users", "`auth`.`id_user`", "=" , "`users`.`id`")
                 ->find( $sessionId );
             
             if($result===false)
@@ -125,13 +126,13 @@ class Auth {
         $AuthData = [
             'id_session' => $sessionId,
             'id_user' => $data['id'],
-            'active' => 1,
-            'usergroup' => $data['usergroup']?? 0,
+            'active' => 1
+            /* 'usergroup' => $data['usergroup']?? 0,
             'name' => $data['name'],
             'last_name' => $data['last_name'],
             'username' => $data['username'],
             'email' => $data['email'],
-            'phone' => $data['phone']
+            'phone' => $data['phone'] */
         ];
         
         $Model = new class($sessionId) extends Model{

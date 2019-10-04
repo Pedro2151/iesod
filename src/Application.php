@@ -37,7 +37,10 @@ class Application{
 		    "/",
 		    DIRECTORY_SEPARATOR,
 		    $dirModule);
-		static::$dirModule = $dirModule;
+        static::$dirModule = $dirModule;
+        if (is_file(DIR_ROOT . "/bootstrap/starter.php")) {
+            require_once DIR_ROOT . "/bootstrap/starter.php";
+        }
 		if(is_file($dirModule."Router.php"))
 		   require_once $dirModule."Router.php";
 		else 
