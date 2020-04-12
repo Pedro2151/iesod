@@ -98,32 +98,26 @@ function session(){
     return new \Iesod\Session();
 }
 function sessionId(){
-    return (new \Iesod\Session())->getId();
-}
-function sessionCreateId($cloneData = false){
-    return (new \Iesod\Session())->createId($cloneData);
+    return \Iesod\Session::getId();
 }
 function sessionClose(){
     return (new \Iesod\Session())->close();
 }
 function sessionGetData($name = null){
-    return (new \Iesod\Session())->get($name);
+    return \Iesod\Session::get($name);
 }
-function sessionPut($value, $name = null, $forceType = false){
-    return (new \Iesod\Session())->put($value, $name, $forceType);
-}
-function sessionPutAppend($value, $name, $forceType = false){
-    return (new \Iesod\Session())->putAppend($value, $name, $forceType);
+function sessionPut($value, $name = null){
+    return \Iesod\Session::set($name, $value);
 }
 function csrfInput(){
-    return '<input type="hidden" name="csrf-token" value="KbyUmhTLMpYj7CD2di7JKP1P3qmLlkPt" />';
+    $csrf = csrfGet();
+    return '<input type="hidden" name="csrf-token" value="'.$csrf.'" />';
 
 }
 function csrfGet(){
     $csrf = $_COOKIE["CSRF-TOKEN"]?? null;
 
-    if(empty($csrf) || is_null($csrf))
-      $csrf = csrfCreate();
+    if(empty($csrf) || is_null($csrf)) $csrf = csrfCreate();
 
     return $csrf;
 }
@@ -137,8 +131,7 @@ function csrfCheck(){
     $h = getallheaders();
 
     $csrfRequest = $_POST['csrf-token']?? null;
-    if( is_null($csrfRequest) )
-      $csrfRequest = $h['X-CSRF-TOKEN']?? null;
+    if( is_null($csrfRequest) ) $csrfRequest = $h['X-CSRF-TOKEN']?? null;
     
     if ($csrfRequest===$csrf){
         header('Access-Control-Allow-Origin: *');

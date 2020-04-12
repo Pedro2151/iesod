@@ -2,216 +2,84 @@
 
 use Iesod\Database\Model;
 
-class Session implements \Serializable {
+class Session {
     static $id;
     static $data;
-    static $dataSerialized = "";
+    static $browser;
+    static $plataform;
     public function __construct() {
-		$idSession = null;
-		if(isset($_COOKIE["IESOD_SESSION"]) && !empty($_COOKIE["IESOD_SESSION"])){
-			$idSession = $_COOKIE["IESOD_SESSION"];
-		}
-		if(isset($_GET["IESOD_SESSION"]) && !empty($_GET["IESOD_SESSION"])){
-			$idSession = $_GET["IESOD_SESSION"];
-		}
-		if(isset($_POST["IESOD_SESSION"]) && !empty($_POST["IESOD_SESSION"])){
-			$idSession = $_POST["IESOD_SESSION"];
-		}
-		
-        if( is_null($idSession) ){
-            $this->createId();
-        } else { 
-            static::$id = $idSession;
-            $this->getData();
-        }
+        $this->getData();
     }
-    private function getData($createIfNotExists = true,$force = false){
+    private function getData($force = false){
         if(!$force && !is_null(static::$data))
             return static::$data;
-        
-        $Model = new class() extends Model {
-            protected $table = 'session';
-            protected $primaryKey = 'id';
-        };
-        
-        $result = $Model->select(['plataform', 'data'])
-            ->id( $this->getId() )
-            ->first();
-        
-        if(!$result || $result['plataform'] != md5($_SERVER['HTTP_USER_AGENT'])) {
-            static::$data = [];
-            if($createIfNotExists)
-                $this->saveData();
-        } else {
-            static::$dataSerialized = $result['data'];
-            $this->unserialize( $result['data'] );
-        }
-        
+
+        static::$data      = $_SESSION['data'] ?? [];
+        static::$browser   = $_SESSION['browser'] ?? $_SERVER['HTTP_USER_AGENT'];
+        static::$plataform = $_SESSION['plataform'] ?? 'undefined';
+
         return static::$data;
     }
     private function saveData () {
         $id = $this->getId();
         if(is_null($id))
             return false;
-        
-        $Model = new class() extends Model {
-            protected $table = 'session';
-            protected $primaryKey = 'id';
-        };
-        
-        $result = $Model->select('id')->id( $id )->first();
-			
-        if(!$result){
+
+        if (function_exists('get_browser')) {
             $browser =  get_browser($_SERVER['HTTP_USER_AGENT'],true);
-            $result = $Model->insert([
-                'id' => $id,
-                'browser' => substr($browser['browser_name_pattern'], 254),
-                'plataform' => $browser['platform'],
-                /* 'browser' => substr($_SERVER['HTTP_USER_AGENT'], 0, 254),
-                'plataform' => md5($_SERVER['HTTP_USER_AGENT']), */
-                'data' => $this->serialize()
-            ], false);
         } else {
-            $serialize = $this->serialize();
-            if(static::$dataSerialized != $serialize){
-                $result = $Model->update(
-                    [ 'data' => $serialize ],
-                    $id
-                );
-                
-                if($result!==false)
-                    static::$dataSerialized = $serialize;
-            }
+            $browser =  [
+                'browser_name_pattern' => $_SERVER['HTTP_USER_AGENT'],
+                'platform' => 'undefined'
+            ];
         }
-        
-        return ($result!==false);
+
+        $_SESSION['id'] = $id;
+        $_SESSION['browser'] = substr($browser['browser_name_pattern'], 254);
+        $_SESSION['plataform'] = $browser['platform'];
+        $_SESSION['data'] = static::$data;
     }
-    public function createId($cloneData = false){
-        static::$dataSerialized = serialize([]);
-        
-        if($cloneData && !is_null(static::$id)){
-            $this->getData(false);
-        } else {
-            static::$data = [];
-        }
-                
-        $id = randomString(32);
-        
-        $this->close();
-        
-        static::$id = $id;
-        setcookie('IESOD_SESSION', static::$id , 0,"/");
-        $this->saveData();
-        
-        return $id;
-    }
-    public function close(){
-        unset($_COOKIE['IESOD_SESSION']);
-        setcookie('IESOD_SESSION', null, -1, "/");
+    public static function close(){
         static::$id = null;
         static::$data = null;
-        static::$dataSerialized = "";
-    }
-    public function serialize() {
-        $data = static::$data;
-        $data['IP_CLIENT'] = $_SERVER['REMOTE_ADDR'];
-        return serialize($data);
-    }
-    /**
-     * @param $serialized
-     */
-    public function unserialize($serialized) {
-        static::$data = unserialize($serialized);
+        static::$browser = null;
+        static::$plataform = null;
+        $_SESSION['data'] = static::$data;
     }
     public static function getId(){
-        return static::$id;
+        if (!is_null(static::$id)) {
+            return static::$id;
+        }
+        $sessId = session_id();
+        if ($sessId == '') {
+            session_start();
+            $sessId = session_id();
+        }
+        static::$id = $sessId;
+        return $sessId;
     }
-    public function get($name = null,$default = null) {
-        if(is_null($name))
-            return static::$data;
-        
-        $names = explode(".", $name);
-        $data = $this->getData(false,is_null(static::$data));
-        foreach($names as $Name){
-            if(!empty($Name)){
-                if(is_array($data) && isset($data[$Name])){
-                    $data = $data[$Name];
-                } else {
-                    return $default;
-                }
-            }
-        }
-        
-        return $data;
+    public function __get ($name)
+    {
+        $data = $this->getData();
+        return $data[$name] ?? null;
     }
-    public function put($value, $name = null,$forceType = false){
-        if(is_null($name)){
-            static::$data = $value;
-            return true;
-        }
-        $data = (static::$data)?? [];
-        $r = $this->_put($data, $value,$name,$forceType);
-		
-		static::$data = $data;
-		return $r;
+
+    public function __set ($name, $value)
+    {
+        $this->getData();
+        static::$data[$name] = $value;
     }
-    private function _put(&$data, $value,$name,$forceType = false){
-        $names = explode(".", $name);
-        $Name = '';
-        while( empty($Name) && count($names)>0 ){
-            $Name = array_shift($names);
-        }
-        
-        if( empty($Name) ){
-            throw new \Error("Name is empty");//Fail
-            return false;
-        }
-        
-        if( count($names)==0 ){
-            $data[$Name] = $value;
-            return true;
-        }
-        
-        if( isset($data[$Name]) ){
-            return $this->_put(
-                $data[$Name],
-                $value,
-                implode(".", $names),
-                $forceType);
-        } else {
-            if($forceType || is_array($data) || is_null($data)){
-                if(!is_array($data)){
-                    $data = [];
-                    $data[$Name] = null;
-                }
-                
-                return $this->_put(
-                    $data[$Name],
-                    $value,
-                    implode(".", $names),
-                    $forceType);
-            } else {
-                throw new \Error("Variable type error(Not array)");//Fail
-                return false;
-            }
-        }
+
+    public static function get ($name)
+    {
+        $Sess = new static();
+        return $Sess->$name;
     }
-    public function putAppend($value,$name,$forceType = false){
-        try {
-            $Value = $this->get($name);
-            if(is_array($Value)){
-                $Value[] = $value;
-            } elseif(is_string($Value)){
-                $Value .= $value;
-            } else {
-                throw new \Error("Variable type error");//Fail
-                return false;
-            }
-        } catch (\Error $e) {
-            $Value = [ $value ];
-        }
-        
-        return $this->put($Value, $name, $forceType);
+    public static function set ($name, $value)
+    {
+        $Sess = new static();
+        $Sess->$name = $value;
+        $Sess->__destruct();
     }
     public function __destruct(){
         $this->saveData();

@@ -8,7 +8,7 @@ class Translate {
     static function setLang($lang = null){
         $Session = new Session();
         if(is_null($lang)){
-            $langSession = $Session->get('lang',null);
+            $langSession = $Session->lang;
             if(is_null($langSession)){
                 $lang = Config::getByModel(
                     "LANGUAGE",
@@ -21,13 +21,11 @@ class Translate {
         }
         
         if(!is_null($lang)){//save if lang is not null.
-            $Session->put($lang,'lang');
+            $Session->lang = $lang;
             $langSession = $lang;
         }
-        
+
         static::$lang = $langSession;
-        
-        $Session->__destruct();
     }
     static function getDataByFile($filename, $silence = false){
         $lang = static::$lang;

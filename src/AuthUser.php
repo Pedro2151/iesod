@@ -30,6 +30,14 @@ class AuthUser {
     public function getData ($name) {
         return $this->dataUser[$name] ?? false;
     }
+    public function __get ($name)
+    {
+        return $this->dataUser[$name] ?? false;
+    }
+    public function __set ($name, $value)
+    {
+        $this->dataUser[$name] = $value;
+    }
     public function setName($value){
         $this->dataUser['name'] = $value;
     }
